@@ -9,7 +9,7 @@ export default {
         accent: "#FACC15", // Yellow for highlights
       },
       fontFamily: {
-        sans: ["Inter", "sans-serif"], // Use Inter as primary font
+        sans: ["Inter", "system-ui", "Avenir", "Helvetica", "Arial", "sans-serif"],
       },
     },
   },
