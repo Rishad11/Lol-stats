@@ -23,12 +23,13 @@ const ChampionsPage = () => {
         setFilteredChampions(data)
       } catch (error) {
         console.error("Error fetching champions:", error)
+        // Initialize with empty array on error
+        setChampions([])
+        setFilteredChampions([])
       } finally {
         setLoading(false)
       }
     }
-
-    fetchChampions()
 
     // For development, use mock data
     const mockChampions = [
@@ -52,6 +53,12 @@ const ChampionsPage = () => {
   }, [])
 
   useEffect(() => {
+    // Make sure champions is defined before filtering
+    if (!champions || champions.length === 0) {
+      setFilteredChampions([])
+      return
+    }
+
     let filtered = [...champions]
 
     // Apply search filter
@@ -61,7 +68,7 @@ const ChampionsPage = () => {
 
     // Apply role filter
     if (roleFilter !== "all") {
-      filtered = filtered.filter((champion) => champion.roles.includes(roleFilter))
+      filtered = filtered.filter((champion) => champion.roles && champion.roles.includes(roleFilter))
     }
 
     setFilteredChampions(filtered)
@@ -152,47 +159,56 @@ const ChampionsPage = () => {
             </tr>
           </thead>
           <tbody className="bg-white divide-y divide-gray-200">
-            {filteredChampions.map((champion) => (
-              <tr key={champion.id} className="hover:bg-gray-50">
-                <td className="px-6 py-4 whitespace-nowrap">
-                  <div className="flex items-center">
-                    <div className="flex-shrink-0 h-10 w-10 rounded-full overflow-hidden">
-                      <img
-                        src={`/placeholder.svg?height=40&width=40&text=${champion.name.charAt(0)}`}
-                        alt={champion.name}
-                        className="h-10 w-10 object-cover"
-                      />
+            {filteredChampions && filteredChampions.length > 0 ? (
+              filteredChampions.map((champion) => (
+                <tr key={champion.id} className="hover:bg-gray-50">
+                  <td className="px-6 py-4 whitespace-nowrap">
+                    <div className="flex items-center">
+                      <div className="flex-shrink-0 h-10 w-10 rounded-full overflow-hidden">
+                        <img
+                          src={`/placeholder.svg?height=40&width=40&text=${champion.name.charAt(0)}`}
+                          alt={champion.name}
+                          className="h-10 w-10 object-cover"
+                        />
+                      </div>
+                      <div className="ml-4">
+                        <Link
+                          to={`/champions/${champion.id}`}
+                          className="text-sm font-medium text-blue-600 hover:underline"
+                        >
+                          {champion.name}
+                        </Link>
+                      </div>
                     </div>
-                    <div className="ml-4">
-                      <Link
-                        to={`/champions/${champion.id}`}
-                        className="text-sm font-medium text-blue-600 hover:underline"
-                      >
-                        {champion.name}
-                      </Link>
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap">
+                    <div className="flex gap-1">
+                      {champion.roles &&
+                        champion.roles.map((role) => (
+                          <span key={role} className="px-2 py-1 text-xs rounded-full bg-gray-100">
+                            {role}
+                          </span>
+                        ))}
                     </div>
-                  </div>
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap">
-                  <div className="flex gap-1">
-                    {champion.roles.map((role) => (
-                      <span key={role} className="px-2 py-1 text-xs rounded-full bg-gray-100">
-                        {role}
-                      </span>
-                    ))}
-                  </div>
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap">
-                  <div className="text-sm text-gray-900">{champion.winRate}%</div>
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap">
-                  <div className="text-sm text-gray-900">{champion.pickRate}%</div>
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap">
-                  <div className="text-sm text-gray-900">{champion.banRate}%</div>
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap">
+                    <div className="text-sm text-gray-900">{champion.winRate}%</div>
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap">
+                    <div className="text-sm text-gray-900">{champion.pickRate}%</div>
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap">
+                    <div className="text-sm text-gray-900">{champion.banRate}%</div>
+                  </td>
+                </tr>
+              ))
+            ) : (
+              <tr>
+                <td colSpan="5" className="px-6 py-4 text-center text-gray-500">
+                  No champions found. Try adjusting your filters.
                 </td>
               </tr>
-            ))}
+            )}
           </tbody>
         </table>
       </div>
