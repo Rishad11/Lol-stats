@@ -6,8 +6,8 @@ const helmet = require("helmet")
 const rateLimit = require("express-rate-limit")
 
 // Import routes
-const summonerRoutes = require("./routes/summonerRoutes")
 const championsRoutes = require("./routes/championsRoutes")
+const summonerRoutes = require("./routes/summonerRoutes")
 const leaderboardsRoutes = require("./routes/leaderboardsRoutes")
 
 // Initialize express app
@@ -34,8 +34,8 @@ if (!process.env.RIOT_API_KEY) {
 }
 
 // Routes
-app.use("/api/summoner", summonerRoutes)
 app.use("/api/champions", championsRoutes)
+app.use("/api/summoner", summonerRoutes)
 app.use("/api/leaderboards", leaderboardsRoutes)
 
 // Health check endpoint

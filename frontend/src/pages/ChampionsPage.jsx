@@ -3,26 +3,28 @@
 import { useState, useEffect } from "react"
 import { Search } from "lucide-react"
 import { Link } from "react-router-dom"
+import axios from "axios"
 
 const ChampionsPage = () => {
   const [champions, setChampions] = useState([])
   const [filteredChampions, setFilteredChampions] = useState([])
   const [loading, setLoading] = useState(true)
+  const [error, setError] = useState(null)
   const [searchQuery, setSearchQuery] = useState("")
   const [roleFilter, setRoleFilter] = useState("all")
 
   useEffect(() => {
     const fetchChampions = async () => {
       try {
-        // In a real app, this would be an actual API call
-        const response = await fetch("/api/champions")
-        if (!response.ok) throw new Error("Failed to fetch champions")
+        setLoading(true)
+        setError(null)
 
-        const data = await response.json()
-        setChampions(data)
-        setFilteredChampions(data)
+        const response = await axios.get("/api/champions")
+        setChampions(response.data)
+        setFilteredChampions(response.data)
       } catch (error) {
         console.error("Error fetching champions:", error)
+        setError("Failed to load champions. Please try again later.")
         // Initialize with empty array on error
         setChampions([])
         setFilteredChampions([])
@@ -31,25 +33,7 @@ const ChampionsPage = () => {
       }
     }
 
-    // For development, use mock data
-    const mockChampions = [
-      { id: "Ahri", name: "Ahri", roles: ["MID"], winRate: 51.2, pickRate: 8.5, banRate: 3.2 },
-      { id: "Ashe", name: "Ashe", roles: ["ADC"], winRate: 49.8, pickRate: 7.2, banRate: 1.5 },
-      { id: "Darius", name: "Darius", roles: ["TOP"], winRate: 50.3, pickRate: 6.8, banRate: 8.7 },
-      { id: "Ekko", name: "Ekko", roles: ["MID", "JUNGLE"], winRate: 50.9, pickRate: 5.4, banRate: 2.8 },
-      { id: "Janna", name: "Janna", roles: ["SUPPORT"], winRate: 52.1, pickRate: 4.3, banRate: 0.9 },
-      { id: "Jinx", name: "Jinx", roles: ["ADC"], winRate: 50.5, pickRate: 9.1, banRate: 2.3 },
-      { id: "Lee Sin", name: "Lee Sin", roles: ["JUNGLE"], winRate: 48.7, pickRate: 10.2, banRate: 5.6 },
-      { id: "Lux", name: "Lux", roles: ["MID", "SUPPORT"], winRate: 50.1, pickRate: 11.5, banRate: 3.4 },
-      { id: "Malphite", name: "Malphite", roles: ["TOP"], winRate: 51.8, pickRate: 3.9, banRate: 2.1 },
-      { id: "Thresh", name: "Thresh", roles: ["SUPPORT"], winRate: 49.5, pickRate: 8.7, banRate: 2.8 },
-      { id: "Yasuo", name: "Yasuo", roles: ["MID", "TOP"], winRate: 48.9, pickRate: 12.3, banRate: 14.5 },
-      { id: "Zed", name: "Zed", roles: ["MID"], winRate: 49.2, pickRate: 9.8, banRate: 13.2 },
-    ]
-
-    setChampions(mockChampions)
-    setFilteredChampions(mockChampions)
-    setLoading(false)
+    fetchChampions()
   }, [])
 
   useEffect(() => {
@@ -85,8 +69,23 @@ const ChampionsPage = () => {
 
   if (loading) {
     return (
-      <div className="flex justify-center items-center min-h-screen">
-        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <h1 className="text-3xl font-bold mb-6">Champions</h1>
+        <div className="flex justify-center items-center py-20">
+          <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
+        </div>
+      </div>
+    )
+  }
+
+  if (error) {
+    return (
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <h1 className="text-3xl font-bold mb-6">Champions</h1>
+        <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded relative" role="alert">
+          <strong className="font-bold">Error: </strong>
+          <span className="block sm:inline">{error}</span>
+        </div>
       </div>
     )
   }
@@ -166,7 +165,7 @@ const ChampionsPage = () => {
                     <div className="flex items-center">
                       <div className="flex-shrink-0 h-10 w-10 rounded-full overflow-hidden">
                         <img
-                          src={`/placeholder.svg?height=40&width=40&text=${champion.name.charAt(0)}`}
+                          src={champion.image || `/placeholder.svg?height=40&width=40&text=${champion.name.charAt(0)}`}
                           alt={champion.name}
                           className="h-10 w-10 object-cover"
                         />
@@ -178,17 +177,21 @@ const ChampionsPage = () => {
                         >
                           {champion.name}
                         </Link>
+                        {champion.title && <p className="text-xs text-gray-500">{champion.title}</p>}
                       </div>
                     </div>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="flex gap-1">
-                      {champion.roles &&
+                    <div className="flex flex-wrap gap-1">
+                      {champion.roles && champion.roles.length > 0 ? (
                         champion.roles.map((role) => (
                           <span key={role} className="px-2 py-1 text-xs rounded-full bg-gray-100">
                             {role}
                           </span>
-                        ))}
+                        ))
+                      ) : (
+                        <span className="text-xs text-gray-500">-</span>
+                      )}
                     </div>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
@@ -205,7 +208,9 @@ const ChampionsPage = () => {
             ) : (
               <tr>
                 <td colSpan="5" className="px-6 py-4 text-center text-gray-500">
-                  No champions found. Try adjusting your filters.
+                  {searchQuery || roleFilter !== "all"
+                    ? "No champions found. Try adjusting your filters."
+                    : "No champions available."}
                 </td>
               </tr>
             )}

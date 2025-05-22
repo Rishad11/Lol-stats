@@ -4,6 +4,7 @@ import Footer from "./components/footer"
 import HomePage from "./pages/HomePage"
 import SummonerPage from "./pages/SummonerPage"
 import ChampionsPage from "./pages/ChampionsPage"
+import ChampionDetailPage from "./pages/ChampionDetailPage"
 import LeaderboardsPage from "./pages/LeaderboardsPage"
 
 function App() {
@@ -16,6 +17,7 @@ function App() {
             <Route path="/" element={<HomePage />} />
             <Route path="/summoner/:region/:summonerName" element={<SummonerPage />} />
             <Route path="/champions" element={<ChampionsPage />} />
+            <Route path="/champions/:championId" element={<ChampionDetailPage />} />
             <Route path="/leaderboards" element={<LeaderboardsPage />} />
           </Routes>
         </main>

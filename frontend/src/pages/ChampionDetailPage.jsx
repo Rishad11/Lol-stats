@@ -1,0 +1,306 @@
+"use client"
+
+import { useState, useEffect } from "react"
+import { useParams, Link } from "react-router-dom"
+import { ArrowLeft, Shield, Sword, Heart, Zap } from "lucide-react"
+import axios from "axios"
+
+const ChampionDetailPage = () => {
+  const { championId } = useParams()
+  const [champion, setChampion] = useState(null)
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState(null)
+  const [activeTab, setActiveTab] = useState("overview")
+
+  useEffect(() => {
+    const fetchChampionDetails = async () => {
+      try {
+        setLoading(true)
+        setError(null)
+
+        const response = await axios.get(`/api/champions/${championId}`)
+        setChampion(response.data)
+      } catch (error) {
+        console.error("Error fetching champion details:", error)
+        setError("Failed to load champion details. Please try again later.")
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    fetchChampionDetails()
+  }, [championId])
+
+  if (loading) {
+    return (
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <Link to="/champions" className="inline-flex items-center text-blue-500 hover:underline mb-6">
+          <ArrowLeft className="mr-2 h-4 w-4" /> Back to Champions
+        </Link>
+        <div className="flex justify-center items-center py-20">
+          <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
+        </div>
+      </div>
+    )
+  }
+
+  if (error) {
+    return (
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <Link to="/champions" className="inline-flex items-center text-blue-500 hover:underline mb-6">
+          <ArrowLeft className="mr-2 h-4 w-4" /> Back to Champions
+        </Link>
+        <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded relative" role="alert">
+          <strong className="font-bold">Error: </strong>
+          <span className="block sm:inline">{error}</span>
+        </div>
+      </div>
+    )
+  }
+
+  if (!champion) {
+    return (
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <Link to="/champions" className="inline-flex items-center text-blue-500 hover:underline mb-6">
+          <ArrowLeft className="mr-2 h-4 w-4" /> Back to Champions
+        </Link>
+        <div className="text-center py-20">
+          <h2 className="text-2xl font-bold text-gray-700">Champion not found</h2>
+        </div>
+      </div>
+    )
+  }
+
+  return (
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <Link to="/champions" className="inline-flex items-center text-blue-500 hover:underline mb-6">
+        <ArrowLeft className="mr-2 h-4 w-4" /> Back to Champions
+      </Link>
+
+      {/* Champion Header */}
+      <div className="relative rounded-lg overflow-hidden mb-8">
+        <div className="absolute inset-0">
+          <img src={champion.splash || "/placeholder.svg"} alt={champion.name} className="w-full h-full object-cover" />
+          <div className="absolute inset-0 bg-gradient-to-t from-black to-transparent opacity-70"></div>
+        </div>
+        <div className="relative px-8 py-16 sm:py-24 flex flex-col items-start">
+          <div className="flex items-center mb-4">
+            <img
+              src={champion.image || "/placeholder.svg"}
+              alt={champion.name}
+              className="w-16 h-16 rounded-full border-2 border-white mr-4"
+            />
+            <div>
+              <h1 className="text-4xl font-bold text-white">{champion.name}</h1>
+              <p className="text-xl text-gray-200">{champion.title}</p>
+            </div>
+          </div>
+          <div className="flex flex-wrap gap-2 mb-6">
+            {champion.tags &&
+              champion.tags.map((tag) => (
+                <span key={tag} className="px-3 py-1 bg-blue-600 text-white text-sm rounded-full">
+                  {tag}
+                </span>
+              ))}
+          </div>
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 bg-white bg-opacity-10 backdrop-blur-sm p-4 rounded-lg">
+            <div className="text-center">
+              <div className="text-white text-sm mb-1">Win Rate</div>
+              <div className="text-xl font-bold text-white">{champion.winRate}%</div>
+            </div>
+            <div className="text-center">
+              <div className="text-white text-sm mb-1">Pick Rate</div>
+              <div className="text-xl font-bold text-white">{champion.pickRate}%</div>
+            </div>
+            <div className="text-center">
+              <div className="text-white text-sm mb-1">Ban Rate</div>
+              <div className="text-xl font-bold text-white">{champion.banRate}%</div>
+            </div>
+            <div className="text-center">
+              <div className="text-white text-sm mb-1">Roles</div>
+              <div className="text-xl font-bold text-white">
+                {champion.roles && champion.roles.length > 0 ? champion.roles.join(", ") : "N/A"}
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Tabs */}
+      <div className="border-b border-gray-200 mb-6">
+        <nav className="flex -mb-px">
+          <button
+            onClick={() => setActiveTab("overview")}
+            className={`py-4 px-6 font-medium text-sm border-b-2 ${
+              activeTab === "overview"
+                ? "border-blue-500 text-blue-600"
+                : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
+            }`}
+          >
+            Overview
+          </button>
+          <button
+            onClick={() => setActiveTab("abilities")}
+            className={`py-4 px-6 font-medium text-sm border-b-2 ${
+              activeTab === "abilities"
+                ? "border-blue-500 text-blue-600"
+                : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
+            }`}
+          >
+            Abilities
+          </button>
+          <button
+            onClick={() => setActiveTab("stats")}
+            className={`py-4 px-6 font-medium text-sm border-b-2 ${
+              activeTab === "stats"
+                ? "border-blue-500 text-blue-600"
+                : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
+            }`}
+          >
+            Stats
+          </button>
+        </nav>
+      </div>
+
+      {/* Tab Content */}
+      <div className="bg-white rounded-lg shadow-md p-6">
+        {activeTab === "overview" && (
+          <div>
+            <h2 className="text-2xl font-bold mb-4">Lore</h2>
+            <p className="text-gray-700 mb-6">{champion.lore}</p>
+
+            <h3 className="text-xl font-bold mb-3">Recommended Roles</h3>
+            <div className="flex flex-wrap gap-2 mb-6">
+              {champion.roles &&
+                champion.roles.map((role) => (
+                  <div key={role} className="flex items-center bg-gray-100 px-3 py-2 rounded-lg">
+                    {role === "TOP" && <Sword className="h-5 w-5 mr-2 text-red-500" />}
+                    {role === "JUNGLE" && <Zap className="h-5 w-5 mr-2 text-green-500" />}
+                    {role === "MID" && <Sword className="h-5 w-5 mr-2 text-blue-500" />}
+                    {role === "ADC" && <Sword className="h-5 w-5 mr-2 text-yellow-500" />}
+                    {role === "SUPPORT" && <Shield className="h-5 w-5 mr-2 text-purple-500" />}
+                    <span>{role}</span>
+                  </div>
+                ))}
+            </div>
+          </div>
+        )}
+
+        {activeTab === "abilities" && (
+          <div>
+            <h2 className="text-2xl font-bold mb-4">Abilities</h2>
+
+            {/* Passive */}
+            <div className="mb-6 p-4 border border-gray-200 rounded-lg">
+              <div className="flex items-start">
+                <img
+                  src={champion.passive.image || "/placeholder.svg"}
+                  alt={champion.passive.name}
+                  className="w-12 h-12 rounded mr-4"
+                />
+                <div>
+                  <h3 className="text-lg font-bold">Passive: {champion.passive.name}</h3>
+                  <p className="text-gray-700">{champion.passive.description}</p>
+                </div>
+              </div>
+            </div>
+
+            {/* Spells */}
+            {champion.spells &&
+              champion.spells.map((spell, index) => (
+                <div key={spell.id} className="mb-6 p-4 border border-gray-200 rounded-lg">
+                  <div className="flex items-start">
+                    <div className="relative mr-4">
+                      <img src={spell.image || "/placeholder.svg"} alt={spell.name} className="w-12 h-12 rounded" />
+                      <div className="absolute -top-2 -right-2 w-6 h-6 rounded-full bg-blue-500 text-white flex items-center justify-center text-xs font-bold">
+                        {["Q", "W", "E", "R"][index]}
+                      </div>
+                    </div>
+                    <div>
+                      <h3 className="text-lg font-bold">{spell.name}</h3>
+                      <p className="text-gray-700">{spell.description}</p>
+                    </div>
+                  </div>
+                </div>
+              ))}
+          </div>
+        )}
+
+        {activeTab === "stats" && (
+          <div>
+            <h2 className="text-2xl font-bold mb-4">Base Stats</h2>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div>
+                <h3 className="text-lg font-bold mb-3">Offensive</h3>
+                <div className="space-y-2">
+                  <div className="flex justify-between items-center">
+                    <div className="flex items-center">
+                      <Sword className="h-5 w-5 mr-2 text-red-500" />
+                      <span>Attack Damage</span>
+                    </div>
+                    <span className="font-medium">
+                      {champion.stats.attackdamage} (+{champion.stats.attackdamageperlevel} per level)
+                    </span>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <div className="flex items-center">
+                      <Zap className="h-5 w-5 mr-2 text-yellow-500" />
+                      <span>Attack Speed</span>
+                    </div>
+                    <span className="font-medium">
+                      {champion.stats.attackspeed.toFixed(3)} (+{(champion.stats.attackspeedperlevel / 100).toFixed(3)}{" "}
+                      per level)
+                    </span>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <div className="flex items-center">
+                      <Sword className="h-5 w-5 mr-2 text-blue-500" />
+                      <span>Attack Range</span>
+                    </div>
+                    <span className="font-medium">{champion.stats.attackrange}</span>
+                  </div>
+                </div>
+              </div>
+
+              <div>
+                <h3 className="text-lg font-bold mb-3">Defensive</h3>
+                <div className="space-y-2">
+                  <div className="flex justify-between items-center">
+                    <div className="flex items-center">
+                      <Heart className="h-5 w-5 mr-2 text-red-500" />
+                      <span>Health</span>
+                    </div>
+                    <span className="font-medium">
+                      {champion.stats.hp} (+{champion.stats.hpperlevel} per level)
+                    </span>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <div className="flex items-center">
+                      <Shield className="h-5 w-5 mr-2 text-gray-500" />
+                      <span>Armor</span>
+                    </div>
+                    <span className="font-medium">
+                      {champion.stats.armor} (+{champion.stats.armorperlevel} per level)
+                    </span>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <div className="flex items-center">
+                      <Shield className="h-5 w-5 mr-2 text-purple-500" />
+                      <span>Magic Resist</span>
+                    </div>
+                    <span className="font-medium">
+                      {champion.stats.spellblock} (+{champion.stats.spellblockperlevel} per level)
+                    </span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
+    </div>
+  )
+}
+
+export default ChampionDetailPage

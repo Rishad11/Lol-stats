@@ -35,13 +35,25 @@ router.get("/", async (req, res) => {
       title: champion.title,
       blurb: champion.blurb,
       image: `https://ddragon.leagueoflegends.com/cdn/${latestVersion}/img/champion/${champion.image.full}`,
-      tags: champion.tags,
+      tags: champion.tags, // These are the roles (Fighter, Tank, Mage, etc.)
     }))
 
-    // Cache the result for 24 hours (86400 seconds)
-    cache.set(cacheKey, champions, 86400)
+    // Fetch champion win rates from a separate API or database
+    // For now, we'll generate random win rates
+    const championsWithStats = champions.map((champion) => {
+      return {
+        ...champion,
+        roles: mapTagsToRoles(champion.tags),
+        winRate: (48 + Math.random() * 8).toFixed(1),
+        pickRate: (2 + Math.random() * 15).toFixed(1),
+        banRate: (1 + Math.random() * 20).toFixed(1),
+      }
+    })
 
-    res.json(champions)
+    // Cache the result for 1 hour (3600 seconds)
+    cache.set(cacheKey, championsWithStats, 3600)
+
+    res.json(championsWithStats)
   } catch (error) {
     console.error("Error fetching champions:", error.message)
     res.status(500).json({ error: "Failed to fetch champions" })
@@ -70,6 +82,10 @@ router.get("/:id", async (req, res) => {
       `https://ddragon.leagueoflegends.com/cdn/${latestVersion}/data/en_US/champion/${id}.json`,
     )
 
+    if (!championResponse.data.data[id]) {
+      return res.status(404).json({ error: "Champion not found" })
+    }
+
     const championData = championResponse.data.data[id]
 
     // Process champion data
@@ -80,7 +96,9 @@ router.get("/:id", async (req, res) => {
       lore: championData.lore,
       image: `https://ddragon.leagueoflegends.com/cdn/${latestVersion}/img/champion/${championData.image.full}`,
       splash: `https://ddragon.leagueoflegends.com/cdn/img/champion/splash/${championData.id}_0.jpg`,
+      loading: `https://ddragon.leagueoflegends.com/cdn/img/champion/loading/${championData.id}_0.jpg`,
       tags: championData.tags,
+      roles: mapTagsToRoles(championData.tags),
       stats: championData.stats,
       spells: championData.spells.map((spell) => ({
         id: spell.id,
@@ -93,10 +111,14 @@ router.get("/:id", async (req, res) => {
         description: championData.passive.description,
         image: `https://ddragon.leagueoflegends.com/cdn/${latestVersion}/img/passive/${championData.passive.image.full}`,
       },
+      // Add random stats for demonstration
+      winRate: (48 + Math.random() * 8).toFixed(1),
+      pickRate: (2 + Math.random() * 15).toFixed(1),
+      banRate: (1 + Math.random() * 20).toFixed(1),
     }
 
-    // Cache the result for 24 hours (86400 seconds)
-    cache.set(cacheKey, champion, 86400)
+    // Cache the result for 1 hour (3600 seconds)
+    cache.set(cacheKey, champion, 3600)
 
     res.json(champion)
   } catch (error) {
@@ -109,6 +131,24 @@ router.get("/:id", async (req, res) => {
     res.status(500).json({ error: "Failed to fetch champion details" })
   }
 })
+
+// Helper function to map Riot's tags to roles
+function mapTagsToRoles(tags) {
+  const roleMap = {
+    Fighter: ["TOP", "JUNGLE"],
+    Tank: ["TOP", "SUPPORT"],
+    Mage: ["MID"],
+    Assassin: ["MID", "JUNGLE"],
+    Marksman: ["ADC"],
+    Support: ["SUPPORT"],
+  }
+
+  // Get all possible roles based on tags
+  const roles = tags.flatMap((tag) => roleMap[tag] || [])
+
+  // Remove duplicates
+  return [...new Set(roles)]
+}
 
 // Get champion stats (win rates, pick rates, etc.)
 router.get("/:id/stats", async (req, res) => {
