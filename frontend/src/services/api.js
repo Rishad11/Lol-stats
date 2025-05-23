@@ -37,6 +37,20 @@ api.interceptors.response.use(
   },
 )
 
+// Region endpoints
+export const getRegions = () => {
+  return api.get("/regions")
+}
+
+// Search endpoints
+export const searchChampions = (query) => {
+  return api.get("/search/champions", { params: { query } })
+}
+
+export const searchSummoners = (region, query) => {
+  return api.get(`/search/summoners/${region}`, { params: { query } })
+}
+
 // Summoner endpoints
 export const getSummoner = (region, summonerName) => {
   return api.get(`/summoner/${region}/${summonerName}`)

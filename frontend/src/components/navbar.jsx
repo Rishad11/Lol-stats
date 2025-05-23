@@ -2,27 +2,11 @@
 
 import { useState } from "react"
 import { Link } from "react-router-dom"
-import { Search, Menu, X } from "lucide-react"
+import { Menu, X } from "lucide-react"
+import SearchBar from "./SearchBar"
 
 const Navbar = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false)
-  const [searchQuery, setSearchQuery] = useState("")
-  const [region, setRegion] = useState("na")
-
-  const handleSearch = (e) => {
-    e.preventDefault()
-    if (searchQuery.trim()) {
-      window.location.href = `/summoner/${region}/${encodeURIComponent(searchQuery.trim())}`
-    }
-  }
-
-  const regions = [
-    { value: "na", label: "NA" },
-    { value: "euw", label: "EUW" },
-    { value: "eune", label: "EUNE" },
-    { value: "kr", label: "KR" },
-    { value: "jp", label: "JP" },
-  ]
 
   return (
     <nav className="bg-blue-600 text-white shadow-md">
@@ -46,29 +30,7 @@ const Navbar = () => {
             </div>
           </div>
           <div className="hidden sm:flex items-center">
-            <form onSubmit={handleSearch} className="flex">
-              <select
-                value={region}
-                onChange={(e) => setRegion(e.target.value)}
-                className="rounded-l-md border-0 py-1.5 text-gray-900 bg-white"
-              >
-                {regions.map((region) => (
-                  <option key={region.value} value={region.value}>
-                    {region.label}
-                  </option>
-                ))}
-              </select>
-              <input
-                type="text"
-                placeholder="Search summoner..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-64 border-0 py-1.5 text-gray-900 placeholder:text-gray-400 focus:ring-0"
-              />
-              <button type="submit" className="bg-blue-800 p-1.5 rounded-r-md hover:bg-blue-900">
-                <Search className="h-5 w-5" />
-              </button>
-            </form>
+            <SearchBar type="summoner" placeholder="Search summoner..." />
           </div>
           <div className="flex items-center sm:hidden">
             <button
@@ -96,29 +58,9 @@ const Navbar = () => {
             </Link>
           </div>
           <div className="pt-4 pb-3 border-t border-blue-700">
-            <form onSubmit={handleSearch} className="flex px-3">
-              <select
-                value={region}
-                onChange={(e) => setRegion(e.target.value)}
-                className="rounded-l-md border-0 py-1.5 text-gray-900 bg-white"
-              >
-                {regions.map((region) => (
-                  <option key={region.value} value={region.value}>
-                    {region.label}
-                  </option>
-                ))}
-              </select>
-              <input
-                type="text"
-                placeholder="Search summoner..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full border-0 py-1.5 text-gray-900 placeholder:text-gray-400 focus:ring-0"
-              />
-              <button type="submit" className="bg-blue-800 p-1.5 rounded-r-md hover:bg-blue-900">
-                <Search className="h-5 w-5" />
-              </button>
-            </form>
+            <div className="px-3">
+              <SearchBar type="summoner" placeholder="Search summoner..." />
+            </div>
           </div>
         </div>
       )}

@@ -8,11 +8,17 @@ const RIOT_API_KEY = process.env.RIOT_API_KEY
 
 // Base URLs for different Riot API endpoints
 const regionToHost = {
-  na: "na1.api.riotgames.com",
-  euw: "euw1.api.riotgames.com",
-  eune: "eun1.api.riotgames.com",
+  na1: "na1.api.riotgames.com",
+  euw1: "euw1.api.riotgames.com",
+  eun1: "eun1.api.riotgames.com",
   kr: "kr.api.riotgames.com",
-  jp: "jp1.api.riotgames.com",
+  jp1: "jp1.api.riotgames.com",
+  br1: "br1.api.riotgames.com",
+  la1: "la1.api.riotgames.com",
+  la2: "la2.api.riotgames.com",
+  oc1: "oc1.api.riotgames.com",
+  ru: "ru.api.riotgames.com",
+  tr1: "tr1.api.riotgames.com",
 }
 
 // Get challenger leaderboard
@@ -78,9 +84,13 @@ router.get("/:region", async (req, res) => {
     res.json(rankedEntries)
   } catch (error) {
     console.error("Error fetching leaderboards:", error.response?.data || error.message)
+
+    if (error.response?.status === 403) {
+      return res.status(403).json({ error: "API key invalid or expired" })
+    }
+
     res.status(500).json({ error: "Failed to fetch leaderboards" })
   }
 })
 
 module.exports = router
-// Compare this snippet from backend/routes/leaderboardsRoutes.js:

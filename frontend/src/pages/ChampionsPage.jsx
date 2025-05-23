@@ -1,9 +1,9 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { Search } from "lucide-react"
-import { Link } from "react-router-dom"
+import { Link, useLocation } from "react-router-dom"
 import axios from "axios"
+import SearchBar from "../components/SearchBar"
 
 const ChampionsPage = () => {
   const [champions, setChampions] = useState([])
@@ -12,6 +12,16 @@ const ChampionsPage = () => {
   const [error, setError] = useState(null)
   const [searchQuery, setSearchQuery] = useState("")
   const [roleFilter, setRoleFilter] = useState("all")
+  const location = useLocation()
+
+  useEffect(() => {
+    // Extract search query from URL if present
+    const params = new URLSearchParams(location.search)
+    const searchParam = params.get("search")
+    if (searchParam) {
+      setSearchQuery(searchParam)
+    }
+  }, [location.search])
 
   useEffect(() => {
     const fetchChampions = async () => {
@@ -96,16 +106,7 @@ const ChampionsPage = () => {
 
       <div className="mb-6 flex flex-col sm:flex-row gap-4">
         <div className="relative flex-1">
-          <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-            <Search className="h-5 w-5 text-gray-400" />
-          </div>
-          <input
-            type="text"
-            placeholder="Search champions..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="pl-10 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
-          />
+          <SearchBar type="champion" placeholder="Search champions..." />
         </div>
 
         <select

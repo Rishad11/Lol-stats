@@ -1,13 +1,60 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { useNavigate } from "react-router-dom"
 import { Search } from "lucide-react"
+import axios from "axios"
 
 const HomePage = () => {
   const [searchQuery, setSearchQuery] = useState("")
-  const [region, setRegion] = useState("na")
+  const [region, setRegion] = useState("na1")
+  const [regions, setRegions] = useState([])
+  const [popularChampions, setPopularChampions] = useState([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState(null)
   const navigate = useNavigate()
+
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        setLoading(true)
+        setError(null)
+
+        // Fetch regions
+        const regionsResponse = await axios.get("/api/regions")
+        setRegions(regionsResponse.data)
+
+        if (regionsResponse.data.length > 0) {
+          setRegion(regionsResponse.data[0].code)
+        }
+
+        // Fetch popular champions
+        const championsResponse = await axios.get("/api/champions")
+        // Sort by pick rate and take top 5
+        const sortedChampions = [...championsResponse.data]
+          .sort((a, b) => Number.parseFloat(b.pickRate) - Number.parseFloat(a.pickRate))
+          .slice(0, 5)
+
+        setPopularChampions(sortedChampions)
+      } catch (error) {
+        console.error("Error fetching data:", error)
+        setError("Failed to load data. Please try again later.")
+
+        // Set fallback data
+        setPopularChampions([
+          { id: "Yasuo", name: "Yasuo", image: "/placeholder.svg?height=80&width=80&text=Y" },
+          { id: "Jinx", name: "Jinx", image: "/placeholder.svg?height=80&width=80&text=J" },
+          { id: "Lux", name: "Lux", image: "/placeholder.svg?height=80&width=80&text=L" },
+          { id: "Zed", name: "Zed", image: "/placeholder.svg?height=80&width=80&text=Z" },
+          { id: "Ahri", name: "Ahri", image: "/placeholder.svg?height=80&width=80&text=A" },
+        ])
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    fetchData()
+  }, [])
 
   const handleSearch = (e) => {
     e.preventDefault()
@@ -15,22 +62,6 @@ const HomePage = () => {
       navigate(`/summoner/${region}/${encodeURIComponent(searchQuery.trim())}`)
     }
   }
-
-  const regions = [
-    { value: "na", label: "NA" },
-    { value: "euw", label: "EUW" },
-    { value: "eune", label: "EUNE" },
-    { value: "kr", label: "KR" },
-    { value: "jp", label: "JP" },
-  ]
-
-  const popularChampions = [
-    { id: "Yasuo", name: "Yasuo" },
-    { id: "Jinx", name: "Jinx" },
-    { id: "Lux", name: "Lux" },
-    { id: "Zed", name: "Zed" },
-    { id: "Ahri", name: "Ahri" },
-  ]
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-blue-500 to-blue-700">
@@ -44,6 +75,12 @@ const HomePage = () => {
             Search for summoners, view match history, and track your performance in League of Legends.
           </p>
 
+          {error && (
+            <div className="mt-4 bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative" role="alert">
+              <span className="block sm:inline">{error}</span>
+            </div>
+          )}
+
           <div className="mt-10 max-w-xl mx-auto">
             <form onSubmit={handleSearch} className="flex shadow-lg rounded-lg overflow-hidden">
               <select
@@ -52,8 +89,8 @@ const HomePage = () => {
                 className="px-4 py-3 bg-white text-gray-800 font-medium border-0"
               >
                 {regions.map((region) => (
-                  <option key={region.value} value={region.value}>
-                    {region.label}
+                  <option key={region.code} value={region.code}>
+                    {region.shortName}
                   </option>
                 ))}
               </select>
@@ -76,22 +113,36 @@ const HomePage = () => {
           <div className="mt-16">
             <h2 className="text-2xl font-bold text-white mb-6">Popular Champions</h2>
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-4 max-w-3xl mx-auto">
-              {popularChampions.map((champion) => (
-                <a
-                  key={champion.id}
-                  href={`/champions/${champion.id}`}
-                  className="bg-white bg-opacity-10 rounded-lg p-4 hover:bg-opacity-20 transition-all"
-                >
-                  <div className="aspect-square rounded-full bg-gray-200 mb-2 overflow-hidden">
-                    <img
-                      src={`/placeholder.svg?height=80&width=80&text=${champion.name}`}
-                      alt={champion.name}
-                      className="w-full h-full object-cover"
-                    />
-                  </div>
-                  <p className="text-white font-medium text-center">{champion.name}</p>
-                </a>
-              ))}
+              {loading
+                ? // Loading skeleton
+                  Array(5)
+                    .fill(0)
+                    .map((_, index) => (
+                      <div key={index} className="bg-white bg-opacity-10 rounded-lg p-4 animate-pulse">
+                        <div className="aspect-square rounded-full bg-gray-300 mb-2"></div>
+                        <div className="h-4 bg-gray-300 rounded w-3/4 mx-auto"></div>
+                      </div>
+                    ))
+                : popularChampions.map((champion) => (
+                    <a
+                      key={champion.id}
+                      href={`/champions/${champion.id}`}
+                      className="bg-white bg-opacity-10 rounded-lg p-4 hover:bg-opacity-20 transition-all"
+                    >
+                      <div className="aspect-square rounded-full bg-gray-200 mb-2 overflow-hidden">
+                        <img
+                          src={champion.image || `/placeholder.svg?height=80&width=80&text=${champion.name.charAt(0)}`}
+                          alt={champion.name}
+                          className="w-full h-full object-cover"
+                          onError={(e) => {
+                            e.target.onerror = null
+                            e.target.src = `/placeholder.svg?height=80&width=80&text=${champion.name.charAt(0)}`
+                          }}
+                        />
+                      </div>
+                      <p className="text-white font-medium text-center">{champion.name}</p>
+                    </a>
+                  ))}
             </div>
           </div>
         </div>
