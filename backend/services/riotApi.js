@@ -1,22 +1,30 @@
-const axios = require("axios")
-const RIOT_API_KEY = process.env.RIOT_API_KEY
-const headers = { "X-Riot-Token": RIOT_API_KEY }
+// services/riotApi.js
 
-const getMatchIdsByPUUID = async (region, puuid, start = 0, count = 10) => {
-  const platform = region.toLowerCase().startsWith("na") ? "americas" : "europe"
-  const url = `https://${platform}.api.riotgames.com/lol/match/v5/matches/by-puuid/${puuid}/ids?queue=420&start=${start}&count=${count}`
-  const response = await axios.get(url, { headers })
-  return response.data
+const axios = require('axios');
+
+function platformFor(region) {
+  if (/^(euw|eune|tr|ru)/.test(region)) return 'europe';
+  if (/^(na|br|lan|las)/.test(region)) return 'americas';
+  return 'asia';
 }
 
-const getMatchDetails = async (region, matchId) => {
-  const platform = region.toLowerCase().startsWith("na") ? "americas" : "europe"
-  const url = `https://${platform}.api.riotgames.com/lol/match/v5/matches/${matchId}`
-  const response = await axios.get(url, { headers })
-  return response.data
+async function getMatchIdsByPUUID(region, puuid, start = 0, count = 100) {
+  const platform = platformFor(region);
+  const url = `https://${platform}.api.riotgames.com/lol/match/v5/matches/by-puuid/${puuid}/ids`;
+  const res = await axios.get(url, {
+    params: { start, count, queue: 420 },
+    headers: { 'X-Riot-Token': process.env.RIOT_API_KEY }
+  });
+  return res.data;  // <-- this is now an array of matchId strings
 }
 
-module.exports = {
-  getMatchIdsByPUUID,
-  getMatchDetails,
+async function getMatchDetails(region, matchId) {
+  const platform = platformFor(region);
+  const url = `https://${platform}.api.riotgames.com/lol/match/v5/matches/${matchId}`;
+  const res = await axios.get(url, {
+    headers: { 'X-Riot-Token': process.env.RIOT_API_KEY }
+  });
+  return res.data;
 }
+
+module.exports = { getMatchIdsByPUUID, getMatchDetails };
