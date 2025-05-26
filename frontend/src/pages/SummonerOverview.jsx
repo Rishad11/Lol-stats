@@ -212,61 +212,66 @@ const SummonerOverview = () => {
         <ArrowLeft className="mr-2 h-4 w-4" /> Back to Home
       </Link>
 
-      {/* Summoner Profile */}
-      <div className="bg-white rounded-lg shadow-md p-6 mb-6">
-        <div className="flex flex-col md:flex-row items-start md:items-center gap-6">
-          <div className="relative">
-            <div className="w-24 h-24 rounded-full bg-gray-200 overflow-hidden">
-              <img
-                src={`https://ddragon.leagueoflegends.com/cdn/14.1.1/img/profileicon/${summoner.profileIconId}.png`}
-                alt={summoner.name}
-                className="w-full h-full object-cover"
-                onError={(e) => {
-                  e.target.onerror = null
-                  e.target.src = `/placeholder.svg?height=96&width=96&text=${summoner.name.charAt(0)}`
-                }}
-              />
-            </div>
-            <div className="absolute -bottom-2 -right-2 bg-blue-500 text-white text-xs font-bold rounded-full w-8 h-8 flex items-center justify-center">
-              {summoner.summonerLevel}
-            </div>
-          </div>
-
-          <div className="flex-1">
-            <h1 className="text-2xl font-bold">{summoner.name}</h1>
-            <p className="text-gray-500">Last updated: {new Date().toLocaleDateString()}</p>
-
-            <div className="mt-4 flex flex-wrap gap-4">
-              <div className="bg-gradient-to-r from-blue-500 to-blue-600 text-white px-4 py-2 rounded-md">
-                <div className="text-sm opacity-80">Rank</div>
-                <div className="font-bold">
-                  {summoner.rank?.tier} {summoner.rank?.rank}
+      {/* Enhanced Summoner Profile */}
+        <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-xl border border-white/20 p-8 mb-8">
+          <div className="flex flex-col lg:flex-row items-start lg:items-center gap-8">
+            <div className="relative group">
+              <div className="w-32 h-32 rounded-2xl bg-gradient-to-br from-blue-400 to-purple-600 p-1 shadow-lg">
+                <div className="w-full h-full rounded-xl overflow-hidden bg-white">
+                  <img
+                    src={`https://ddragon.leagueoflegends.com/cdn/14.1.1/img/profileicon/${summoner.profileIconId}.png`}
+                    alt={summoner.name}
+                    className="w-full h-full object-cover"
+                    onError={(e) => {
+                      e.target.onerror = null
+                      e.target.src = `/placeholder.svg?height=128&width=128&text=${summoner.name.charAt(0)}`
+                    }}
+                  />
                 </div>
               </div>
+              <div className="absolute -bottom-3 -right-3 bg-gradient-to-r from-blue-500 to-purple-600 text-white text-sm font-bold rounded-xl px-3 py-2 shadow-lg">
+                {summoner.summonerLevel}
+              </div>
+            </div>
 
-              <div className="bg-gray-100 px-4 py-2 rounded-md">
-                <div className="text-sm text-gray-500">LP</div>
-                <div className="font-bold">{summoner.rank?.leaguePoints}</div>
+            <div className="flex-1 space-y-6">
+              <div>
+                <h1 className="text-4xl font-bold bg-gradient-to-r from-slate-800 to-slate-600 bg-clip-text text-transparent">
+                  {summoner.name}
+                </h1>
+                <p className="text-slate-500 mt-1">Champion Mastery Overview</p>
               </div>
 
-              <div className="bg-gray-100 px-4 py-2 rounded-md">
-                <div className="text-sm text-gray-500">Win Rate</div>
-                <div className="font-bold">
-                  {typeof summoner.winRate !== "undefined" ? summoner.winRate : winRateFromMatches}%
+              <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+                <div className="bg-gradient-to-br from-blue-500 to-blue-600 text-white p-4 rounded-xl shadow-lg">
+                  <div className="text-sm opacity-90">Rank</div>
+                  <div className="font-bold text-lg">
+                    {summoner.rank ? `${summoner.rank.tier} ${summoner.rank.rank}` : "Unranked"}
+                  </div>
                 </div>
-              </div>
 
-              <div className="bg-gray-100 px-4 py-2 rounded-md">
-                <div className="text-sm text-gray-500">W/L</div>
-                <div className="font-bold text-green-500">
-                  {summoner.rank ? summoner.rank.wins : wins}W{" "}
-                  <span className="text-red-500">{summoner.rank ? summoner.rank.losses : losses}L</span>
+                <div className="bg-white p-4 rounded-xl shadow-lg border border-slate-200">
+                  <div className="text-sm text-slate-500">LP</div>
+                  <div className="font-bold text-lg text-slate-800">{summoner.rank?.leaguePoints || 0}</div>
+                </div>
+
+                <div className="bg-white p-4 rounded-xl shadow-lg border border-slate-200">
+                  <div className="text-sm text-slate-500">Win Rate</div>
+                  <div className="font-bold text-lg text-emerald-600">{summoner.winRate || 0}%</div>
+                </div>
+
+                <div className="bg-white p-4 rounded-xl shadow-lg border border-slate-200">
+                  <div className="text-sm text-slate-500">Games</div>
+                  <div className="font-bold text-lg text-slate-800">
+                    <span className="text-emerald-500">{summoner.rank?.wins || 0}W</span>
+                    <span className="text-slate-400 mx-1">/</span>
+                    <span className="text-red-500">{summoner.rank?.losses || 0}L</span>
+                  </div>
                 </div>
               </div>
             </div>
           </div>
         </div>
-      </div>
 
       {/* Tabs */}
       <SummonerTabs region={region} summonerName={summonerName} />
