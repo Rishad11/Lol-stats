@@ -94,6 +94,12 @@ router.get("/:region/:puuid/matches", async (req, res) => {
         visionScore: player.visionScore,
         multikill: player.largestMultiKill > 1 ? `${player.largestMultiKill}x` : null,
         gameMode: match.info.gameMode,
+        queueId: match.info.queueId,
+        items: [
+          player.item0, player.item1, player.item2,
+          player.item3, player.item4, player.item5,
+          player.item6
+        ],
       })
       await delay(100)
     }

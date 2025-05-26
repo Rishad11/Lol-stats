@@ -59,6 +59,28 @@ const keystoneRunes = {
   8136: "CheapShot",
 }
 
+// Game mode mappings
+const gameTypeMap = {
+  400: "Normal Draft",
+  420: "Ranked Solo/Duo",
+  430: "Normal Blind",
+  440: "Ranked Flex",
+  450: "ARAM",
+  700: "Clash",
+  830: "Co-op vs AI Intro",
+  840: "Co-op vs AI Beginner",
+  850: "Co-op vs AI Intermediate",
+  900: "URF",
+  1020: "One for All",
+  1300: "Nexus Blitz",
+  1400: "Ultimate Spellbook",
+  1700: "Arena",
+  1900: "Pick URF",
+  2000: "Tutorial",
+  2010: "Tutorial",
+  2020: "Tutorial",
+}
+
 const SummonerOverview = () => {
   const { region, summonerName } = useParams()
   const [summoner, setSummoner] = useState(null)
@@ -102,9 +124,12 @@ const SummonerOverview = () => {
           const { puuid } = accountResponse.data
           const summonerResponse = await axios.get(`/api/summoner/by-puuid/${region}/${puuid}`)
           summonerData = summonerResponse.data
+          // Store the original searched name for display
+          summonerData.searchedName = `${gameName}#${tagLine}`
         } else {
           const summonerResponse = await axios.get(`/api/summoner/${region}/${encodeURIComponent(summonerName)}`)
           summonerData = summonerResponse.data
+          summonerData.searchedName = summonerName
         }
 
         const rankResponse = await axios.get(`/api/summoner/${region}/${summonerData.id}/rank`)
@@ -213,65 +238,65 @@ const SummonerOverview = () => {
       </Link>
 
       {/* Enhanced Summoner Profile */}
-        <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-xl border border-white/20 p-8 mb-8">
-          <div className="flex flex-col lg:flex-row items-start lg:items-center gap-8">
-            <div className="relative group">
-              <div className="w-32 h-32 rounded-2xl bg-gradient-to-br from-blue-400 to-purple-600 p-1 shadow-lg">
-                <div className="w-full h-full rounded-xl overflow-hidden bg-white">
-                  <img
-                    src={`https://ddragon.leagueoflegends.com/cdn/14.1.1/img/profileicon/${summoner.profileIconId}.png`}
-                    alt={summoner.name}
-                    className="w-full h-full object-cover"
-                    onError={(e) => {
-                      e.target.onerror = null
-                      e.target.src = `/placeholder.svg?height=128&width=128&text=${summoner.name.charAt(0)}`
-                    }}
-                  />
-                </div>
-              </div>
-              <div className="absolute -bottom-3 -right-3 bg-gradient-to-r from-blue-500 to-purple-600 text-white text-sm font-bold rounded-xl px-3 py-2 shadow-lg">
-                {summoner.summonerLevel}
+      <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-xl border border-white/20 p-8 mb-8">
+        <div className="flex flex-col lg:flex-row items-start lg:items-center gap-8">
+          <div className="relative group">
+            <div className="w-32 h-32 rounded-2xl bg-gradient-to-br from-blue-400 to-purple-600 p-1 shadow-lg">
+              <div className="w-full h-full rounded-xl overflow-hidden bg-white">
+                <img
+                  src={`https://ddragon.leagueoflegends.com/cdn/14.1.1/img/profileicon/${summoner.profileIconId}.png`}
+                  alt={summoner.searchedName}
+                  className="w-full h-full object-cover"
+                  onError={(e) => {
+                    e.target.onerror = null
+                    e.target.src = `/placeholder.svg?height=128&width=128&text=${summoner.searchedName.charAt(0)}`
+                  }}
+                />
               </div>
             </div>
+            <div className="absolute -bottom-3 -right-3 bg-gradient-to-r from-blue-500 to-purple-600 text-white text-sm font-bold rounded-xl px-3 py-2 shadow-lg">
+              {summoner.summonerLevel}
+            </div>
+          </div>
 
-            <div className="flex-1 space-y-6">
-              <div>
-                <h1 className="text-4xl font-bold bg-gradient-to-r from-slate-800 to-slate-600 bg-clip-text text-transparent">
-                  {summoner.name}
-                </h1>
-                <p className="text-slate-500 mt-1">Champion Mastery Overview</p>
+          <div className="flex-1 space-y-6">
+            <div>
+              <h1 className="text-4xl font-bold bg-gradient-to-r from-slate-800 to-slate-600 bg-clip-text text-transparent">
+                {summoner.searchedName}
+              </h1>
+              <p className="text-slate-500 mt-1">{region.toUpperCase()} • Summoner Overview</p>
+            </div>
+
+            <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+              <div className="bg-gradient-to-br from-blue-500 to-blue-600 text-white p-4 rounded-xl shadow-lg">
+                <div className="text-sm opacity-90">Rank</div>
+                <div className="font-bold text-lg">
+                  {summoner.rank ? `${summoner.rank.tier} ${summoner.rank.rank}` : "Unranked"}
+                </div>
               </div>
 
-              <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-                <div className="bg-gradient-to-br from-blue-500 to-blue-600 text-white p-4 rounded-xl shadow-lg">
-                  <div className="text-sm opacity-90">Rank</div>
-                  <div className="font-bold text-lg">
-                    {summoner.rank ? `${summoner.rank.tier} ${summoner.rank.rank}` : "Unranked"}
-                  </div>
-                </div>
+              <div className="bg-white p-4 rounded-xl shadow-lg border border-slate-200">
+                <div className="text-sm text-slate-500">LP</div>
+                <div className="font-bold text-lg text-slate-800">{summoner.rank?.leaguePoints || 0}</div>
+              </div>
 
-                <div className="bg-white p-4 rounded-xl shadow-lg border border-slate-200">
-                  <div className="text-sm text-slate-500">LP</div>
-                  <div className="font-bold text-lg text-slate-800">{summoner.rank?.leaguePoints || 0}</div>
-                </div>
+              <div className="bg-white p-4 rounded-xl shadow-lg border border-slate-200">
+                <div className="text-sm text-slate-500">Win Rate</div>
+                <div className="font-bold text-lg text-emerald-600">{summoner.winRate || 0}%</div>
+              </div>
 
-                <div className="bg-white p-4 rounded-xl shadow-lg border border-slate-200">
-                  <div className="text-sm text-slate-500">Win Rate</div>
-                  <div className="font-bold text-lg text-emerald-600">{summoner.winRate || 0}%</div>
-                </div>
-
-                <div className="bg-white p-4 rounded-xl shadow-lg border border-slate-200">
-                  <div className="text-sm text-slate-500">Games</div>
-                  <div className="font-bold text-lg text-slate-800">
-                    <span className="text-emerald-500">{summoner.rank?.wins || 0}W</span>
-                    <span className="text-slate-400 mx-1">/</span>
-                    <span className="text-red-500">{summoner.rank?.losses || 0}L</span>
-                  </div>
+              <div className="bg-white p-4 rounded-xl shadow-lg border border-slate-200">
+                <div className="text-sm text-slate-500">Games</div>
+                <div className="font-bold text-lg text-slate-800">
+                  <span className="text-emerald-500">{summoner.rank?.wins || 0}W</span>
+                  <span className="text-slate-400 mx-1">/</span>
+                  <span className="text-red-500">{summoner.rank?.losses || 0}L</span>
                 </div>
               </div>
             </div>
           </div>
         </div>
+      </div>
 
       {/* Tabs */}
       <SummonerTabs region={region} summonerName={summonerName} />
@@ -285,287 +310,354 @@ const SummonerOverview = () => {
             <p className="text-gray-500">No recent matches found for this summoner.</p>
           </div>
         ) : (
-          matches.map((match) => (
-            <div
-              key={match.id}
-              className={`bg-white rounded-lg shadow-md overflow-hidden border-l-4 ${
-                match.win ? "border-blue-500" : "border-red-500"
-              }`}
-            >
-              <div className="p-4">
-                <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
-                  <div className="flex-shrink-0">
-                    <div className="w-16 h-16 rounded-full bg-gray-200 overflow-hidden">
-                      <img
-                        src={`https://ddragon.leagueoflegends.com/cdn/14.1.1/img/champion/${match.champion}.png`}
-                        alt={match.champion}
-                        className="w-full h-full object-cover"
-                        onError={(e) => {
-                          e.target.onerror = null
-                          e.target.src = `/placeholder.svg?height=64&width=64&text=${match.champion.charAt(0)}`
-                        }}
-                      />
-                    </div>
-                  </div>
+          matches.map((match) => {
+            // Temporary debugging - remove this after fixing
+            console.log("Match object keys:", Object.keys(match))
+            console.log("Match queue info:", {
+              queueId: match.queueId,
+              queue: match.queue,
+              gameMode: match.gameMode,
+              gameType: match.gameType,
+            })
+            console.log("Match items:", { item0: match.item0, item1: match.item1, items: match.items })
 
-                  <div className="flex-1">
-                    <div className="flex flex-wrap justify-between gap-2">
-                      <div>
-                        <h3 className="font-bold">{match.champion}</h3>
-                        <p className={`text-sm ${match.win ? "text-blue-500" : "text-red-500"}`}>
-                          {match.win ? "Victory" : "Defeat"} • {match.role}
-                        </p>
-                        <p className="text-sm text-gray-500">
-                          {new Date(match.gameCreation).toLocaleDateString()} • {Math.floor(match.gameDuration / 60)}:
-                          {(match.gameDuration % 60).toString().padStart(2, "0")}
-                        </p>
+            return (
+              <div
+                key={match.id}
+                className={`bg-white rounded-lg shadow-md overflow-hidden border-l-4 ${
+                  match.win ? "border-blue-500" : "border-red-500"
+                }`}
+              >
+                <div className="p-4">
+                  <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
+                    <div className="flex-shrink-0">
+                      <div className="w-16 h-16 rounded-full bg-gray-200 overflow-hidden">
+                        <img
+                          src={`https://ddragon.leagueoflegends.com/cdn/14.1.1/img/champion/${match.champion}.png`}
+                          alt={match.champion}
+                          className="w-full h-full object-cover"
+                          onError={(e) => {
+                            e.target.onerror = null
+                            e.target.src = `/placeholder.svg?height=64&width=64&text=${match.champion.charAt(0)}`
+                          }}
+                        />
                       </div>
+                    </div>
 
-                      <div className="flex flex-col items-end">
-                        <div className="text-lg font-bold">
-                          {match.kills} / <span className="text-red-500">{match.deaths}</span> / {match.assists}
+                    <div className="flex-1">
+                      <div className="flex flex-wrap justify-between gap-2">
+                        <div>
+                          <h3 className="font-bold">{match.champion}</h3>
+                          <p className={`text-sm ${match.win ? "text-blue-500" : "text-red-500"}`}>
+                            {match.win ? "Victory" : "Defeat"} • {match.role}
+                          </p>
+                          <p className="text-sm text-gray-500">
+                            {new Date(match.gameCreation).toLocaleDateString()} • {Math.floor(match.gameDuration / 60)}:
+                            {(match.gameDuration % 60).toString().padStart(2, "0")} •{" "}
+                            {gameTypeMap[match.queueId] || gameTypeMap[match.queue] || match.gameMode || "Unknown"}
+                          </p>
                         </div>
-                        <div className="text-sm text-gray-500">
-                          {((match.kills + match.assists) / Math.max(1, match.deaths)).toFixed(2)} KDA
+
+                        <div className="flex flex-col items-end">
+                          <div className="text-lg font-bold">
+                            {match.kills} / <span className="text-red-500">{match.deaths}</span> / {match.assists}
+                          </div>
+                          <div className="text-sm text-gray-500">
+                            {((match.kills + match.assists) / Math.max(1, match.deaths)).toFixed(2)} KDA
+                          </div>
                         </div>
                       </div>
-                    </div>
 
-                    <div className="mt-4 grid grid-cols-2 sm:grid-cols-4 gap-4">
-                      <div className="flex items-center">
-                        <Sword className="h-4 w-4 mr-2 text-gray-500" />
-                        <span className="text-sm">
-                          CS: {match.cs} ({(match.cs / (match.gameDuration / 60)).toFixed(1)})
-                        </span>
-                      </div>
-                      <div className="flex items-center">
-                        <Shield className="h-4 w-4 mr-2 text-gray-500" />
-                        <span className="text-sm">Vision: {match.visionScore || "N/A"}</span>
-                      </div>
-                      <div className="flex items-center">
-                        <Award className="h-4 w-4 mr-2 text-gray-500" />
-                        <span className="text-sm">{match.multikill || "No"} Multikill</span>
-                      </div>
-                      <div className="flex items-center">
-                        <Users className="h-4 w-4 mr-2 text-gray-500" />
-                        <span className="text-sm">{match.gameMode || "5v5"}</span>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Toggle details button */}
-                <button
-                  onClick={() => toggleDetails(match.id)}
-                  className="mt-2 px-3 py-1 bg-blue-500 text-white rounded hover:bg-blue-600 transition-colors"
-                >
-                  {matchDetails[match.id]?.expanded ? "Hide Details" : "Show Details"}
-                </button>
-
-                {/* Render additional match details if toggled */}
-                {matchDetails[match.id]?.expanded && matchDetails[match.id]?.data && (
-                  <div className="p-4 bg-gray-50 mt-4 rounded">
-                    <h4 className="text-lg font-bold mb-4">Match Details</h4>
-
-                    {/* Team Split Details Block */}
-                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-                      {[100, 200].map((teamId) => (
-                        <div key={teamId} className="space-y-3">
-                          <h5 className={`font-semibold text-lg ${teamId === 100 ? "text-blue-600" : "text-red-600"}`}>
-                            {teamId === 100 ? "Blue Team" : "Red Team"}
-                          </h5>
-                          {matchDetails[match.id].data.info.participants
-                            .filter((p) => p.teamId === teamId)
-                            .map((participant) => (
-                              <div
-                                key={participant.puuid}
-                                className="flex items-center space-x-3 p-3 bg-white rounded-lg border"
-                              >
-                                {/* Champion Image */}
-                                <div className="flex-shrink-0">
+                      {/* Items Row */}
+                      <div className="mt-3 flex items-center gap-2">
+                        <span className="text-sm text-gray-600 font-medium">Items:</span>
+                        <div className="flex gap-1">
+                          {/* Check if items exist in match object, otherwise show placeholders */}
+                          {match.items && match.items.length > 0
+                            ? match.items.slice(0, 7).map((id, i) =>
+                                id > 0 ? (
                                   <img
-                                    src={`https://ddragon.leagueoflegends.com/cdn/14.1.1/img/champion/${participant.championName}.png`}
-                                    alt={participant.championName}
-                                    className="w-8 h-8 rounded"
+                                    key={i}
+                                    src={`https://ddragon.leagueoflegends.com/cdn/14.1.1/img/item/${id}.png`}
+                                    alt="Item"
+                                    className="w-8 h-8 rounded border border-gray-200"
                                     onError={(e) => {
                                       e.target.onerror = null
-                                      e.target.src = `/placeholder.svg?height=32&width=32&text=${participant.championName.charAt(0)}`
+                                      e.target.src = `/placeholder.svg?height=32&width=32&text=?`
                                     }}
                                   />
-                                </div>
-
-                                {/* Summoner Name */}
-                                <div className="min-w-0 flex-1">
-                                  <span className="text-sm font-medium truncate block">
-                                    {participant.riotIdGameName || participant.summonerName || "Unknown"}
-                                  </span>
-                                </div>
-
-                                {/* Summoner Spells */}
-                                <div className="flex space-x-1">
-                                  {[participant.summoner1Id, participant.summoner2Id].map((spellId, i) => {
-                                    const spellName = summonerSpells[spellId]
-                                    return spellName ? (
-                                      <img
-                                        key={i}
-                                        src={`https://ddragon.leagueoflegends.com/cdn/14.1.1/img/spell/${spellName}.png`}
-                                        alt={`Summoner Spell ${spellId}`}
-                                        className="w-5 h-5 rounded"
-                                        onError={(e) => {
-                                          e.target.style.display = "none"
-                                        }}
-                                      />
-                                    ) : (
-                                      <div key={i} className="w-5 h-5 bg-gray-200 rounded"></div>
-                                    )
-                                  })}
-                                </div>
-
-                                {/* Primary and Secondary Runes */}
-                                <div className="flex space-x-1">
-                                  {participant.perks?.styles?.length >= 1 && (
-                                    <>
-                                      {/* Primary Keystone Rune */}
-                                      {(() => {
-                                        const primaryStyle = participant.perks.styles[0]
-                                        if (primaryStyle?.selections?.[0]) {
-                                          const keystoneId = primaryStyle.selections[0].perk
-                                          const keystoneName = keystoneRunes[keystoneId]
-
-                                          // Define colors for different rune trees
-                                          const getRuneColor = (styleId) => {
-                                            switch (styleId) {
-                                              case 8000:
-                                                return "bg-yellow-500" // Precision
-                                              case 8100:
-                                                return "bg-red-500" // Domination
-                                              case 8200:
-                                                return "bg-blue-500" // Sorcery
-                                              case 8300:
-                                                return "bg-teal-500" // Inspiration
-                                              case 8400:
-                                                return "bg-green-500" // Resolve
-                                              default:
-                                                return "bg-gray-500"
-                                            }
-                                          }
-
-                                          return (
-                                            <div
-                                              className={`w-5 h-5 rounded flex items-center justify-center ${getRuneColor(primaryStyle.style)}`}
-                                            >
-                                              <span
-                                                className="text-xs font-bold text-white"
-                                                style={{ fontSize: "8px" }}
-                                                title={`${keystoneName || "Unknown Keystone"} (ID: ${keystoneId})`}
-                                              >
-                                                {keystoneName
-                                                  ? keystoneName.slice(0, 2).toUpperCase()
-                                                  : keystoneId.toString().slice(-2)}
-                                              </span>
-                                            </div>
-                                          )
-                                        }
-                                        return (
-                                          <div className="w-5 h-5 bg-gray-200 rounded" title="No primary rune"></div>
-                                        )
-                                      })()}
-
-                                      {/* Secondary Rune Tree */}
-                                      {participant.perks.styles.length >= 2 &&
-                                        (() => {
-                                          const secondaryStyle = participant.perks.styles[1]
-                                          const styleIcon = runeStyles[secondaryStyle?.style]
-                                          return styleIcon ? (
-                                            <div className="w-5 h-5 rounded bg-blue-500 flex items-center justify-center relative">
-                                              <img
-                                                src={`https://ddragon.leagueoflegends.com/cdn/img/perk-images/Styles/${styleIcon}.png`}
-                                                alt="Secondary Rune Tree"
-                                                className="w-full h-full rounded absolute inset-0"
-                                                style={{ display: "none" }}
-                                                onLoad={(e) => {
-                                                  e.target.style.display = "block"
-                                                  e.target.parentNode.style.backgroundColor = "transparent"
-                                                }}
-                                                onError={(e) => {
-                                                  e.target.style.display = "none"
-                                                }}
-                                              />
-                                              <span
-                                                className="text-xs font-bold text-white z-10"
-                                                style={{ fontSize: "8px" }}
-                                              >
-                                                {styleIcon ? styleIcon.split("_")[1].slice(0, 2).toUpperCase() : "S"}
-                                              </span>
-                                            </div>
-                                          ) : (
-                                            <div
-                                              className="w-5 h-5 bg-gray-200 rounded"
-                                              title="No secondary rune"
-                                            ></div>
-                                          )
-                                        })()}
-                                    </>
-                                  )}
-                                </div>
-
-                                {/* KDA */}
-                                <div className="text-xs text-center min-w-[60px]">
-                                  <div className="font-medium">
-                                    {participant.kills}/{participant.deaths}/{participant.assists}
-                                  </div>
-                                  <div className="text-gray-500">
-                                    {(
-                                      (participant.kills + participant.assists) /
-                                      Math.max(1, participant.deaths)
-                                    ).toFixed(1)}{" "}
-                                    KDA
-                                  </div>
-                                </div>
-
-                                {/* CS and Vision Score */}
-                                <div className="text-xs text-center min-w-[50px]">
-                                  <div className="font-medium">
-                                    {participant.totalMinionsKilled + participant.neutralMinionsKilled} CS
-                                  </div>
-                                  <div className="text-gray-500">VS: {participant.visionScore}</div>
-                                </div>
-
-                                {/* Items */}
-                                <div className="flex space-x-1">
-                                  {[
-                                    participant.item0,
-                                    participant.item1,
-                                    participant.item2,
-                                    participant.item3,
-                                    participant.item4,
-                                    participant.item5,
-                                    participant.item6,
-                                  ]
-                                    .filter((id) => id > 0)
-                                    .slice(0, 6)
-                                    .map((id, i) => (
-                                      <img
-                                        key={i}
-                                        src={`https://ddragon.leagueoflegends.com/cdn/14.1.1/img/item/${id}.png`}
-                                        alt="Item"
-                                        className="w-5 h-5 rounded"
-                                        onError={(e) => {
-                                          e.target.style.display = "none"
-                                        }}
-                                      />
-                                    ))}
-                                </div>
-                              </div>
-                            ))}
+                                ) : (
+                                  <div key={i} className="w-8 h-8 rounded border border-gray-200 bg-gray-100"></div>
+                                ),
+                              )
+                            : /* If no items array, try individual item properties */
+                              [
+                                match.item0,
+                                match.item1,
+                                match.item2,
+                                match.item3,
+                                match.item4,
+                                match.item5,
+                                match.item6,
+                              ].map((id, i) =>
+                                id && id > 0 ? (
+                                  <img
+                                    key={i}
+                                    src={`https://ddragon.leagueoflegends.com/cdn/14.1.1/img/item/${id}.png`}
+                                    alt="Item"
+                                    className="w-8 h-8 rounded border border-gray-200"
+                                    onError={(e) => {
+                                      e.target.onerror = null
+                                      e.target.src = `/placeholder.svg?height=32&width=32&text=?`
+                                    }}
+                                  />
+                                ) : (
+                                  <div key={i} className="w-8 h-8 rounded border border-gray-200 bg-gray-100"></div>
+                                ),
+                              )}
                         </div>
-                      ))}
+                      </div>
+
+                      <div className="mt-4 grid grid-cols-2 sm:grid-cols-4 gap-4">
+                        <div className="flex items-center">
+                          <Sword className="h-4 w-4 mr-2 text-gray-500" />
+                          <span className="text-sm">
+                            CS: {match.cs} ({(match.cs / (match.gameDuration / 60)).toFixed(1)})
+                          </span>
+                        </div>
+                        <div className="flex items-center">
+                          <Shield className="h-4 w-4 mr-2 text-gray-500" />
+                          <span className="text-sm">Vision: {match.visionScore || "N/A"}</span>
+                        </div>
+                        <div className="flex items-center">
+                          <Award className="h-4 w-4 mr-2 text-gray-500" />
+                          <span className="text-sm">{match.multikill || "No"} Multikill</span>
+                        </div>
+                        <div className="flex items-center">
+                          <Users className="h-4 w-4 mr-2 text-gray-500" />
+                          <span className="text-sm">
+                            {gameTypeMap[match.queueId] || gameTypeMap[match.queue] || match.gameMode || "Unknown"}
+                          </span>
+                        </div>
+                      </div>
                     </div>
                   </div>
-                )}
+
+                  {/* Toggle details button */}
+                  <button
+                    onClick={() => toggleDetails(match.id)}
+                    className="mt-2 px-3 py-1 bg-blue-500 text-white rounded hover:bg-blue-600 transition-colors"
+                  >
+                    {matchDetails[match.id]?.expanded ? "Hide Details" : "Show Details"}
+                  </button>
+
+                  {/* Render additional match details if toggled */}
+                  {matchDetails[match.id]?.expanded && matchDetails[match.id]?.data && (
+                    <div className="p-4 bg-gray-50 mt-4 rounded">
+                      <h4 className="text-lg font-bold mb-4">Match Details</h4>
+
+                      {/* Team Split Details Block */}
+                      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                        {[100, 200].map((teamId) => (
+                          <div key={teamId} className="space-y-3">
+                            <h5
+                              className={`font-semibold text-lg ${teamId === 100 ? "text-blue-600" : "text-red-600"}`}
+                            >
+                              {teamId === 100 ? "Blue Team" : "Red Team"}
+                            </h5>
+                            {matchDetails[match.id].data.info.participants
+                              .filter((p) => p.teamId === teamId)
+                              .map((participant) => (
+                                <div
+                                  key={participant.puuid}
+                                  className="flex items-center space-x-3 p-3 bg-white rounded-lg border"
+                                >
+                                  {/* Champion Image */}
+                                  <div className="flex-shrink-0">
+                                    <img
+                                      src={`https://ddragon.leagueoflegends.com/cdn/14.1.1/img/champion/${participant.championName}.png`}
+                                      alt={participant.championName}
+                                      className="w-8 h-8 rounded"
+                                      onError={(e) => {
+                                        e.target.onerror = null
+                                        e.target.src = `/placeholder.svg?height=32&width=32&text=${participant.championName.charAt(0)}`
+                                      }}
+                                    />
+                                  </div>
+
+                                  {/* Summoner Name */}
+                                  <div className="min-w-0 flex-1">
+                                    <span className="text-sm font-medium truncate block">
+                                      {participant.riotIdGameName || participant.summonerName || "Unknown"}
+                                    </span>
+                                  </div>
+
+                                  {/* Summoner Spells */}
+                                  <div className="flex space-x-1">
+                                    {[participant.summoner1Id, participant.summoner2Id].map((spellId, i) => {
+                                      const spellName = summonerSpells[spellId]
+                                      return spellName ? (
+                                        <img
+                                          key={i}
+                                          src={`https://ddragon.leagueoflegends.com/cdn/14.1.1/img/spell/${spellName}.png`}
+                                          alt={`Summoner Spell ${spellId}`}
+                                          className="w-5 h-5 rounded"
+                                          onError={(e) => {
+                                            e.target.style.display = "none"
+                                          }}
+                                        />
+                                      ) : (
+                                        <div key={i} className="w-5 h-5 bg-gray-200 rounded"></div>
+                                      )
+                                    })}
+                                  </div>
+
+                                  {/* Primary and Secondary Runes */}
+                                  <div className="flex space-x-1">
+                                    {participant.perks?.styles?.length >= 1 && (
+                                      <>
+                                        {/* Primary Keystone Rune */}
+                                        {(() => {
+                                          const primaryStyle = participant.perks.styles[0]
+                                          if (primaryStyle?.selections?.[0]) {
+                                            const keystoneId = primaryStyle.selections[0].perk
+                                            const keystoneName = keystoneRunes[keystoneId]
+
+                                            // Define colors for different rune trees
+                                            const getRuneColor = (styleId) => {
+                                              switch (styleId) {
+                                                case 8000:
+                                                  return "bg-yellow-500" // Precision
+                                                case 8100:
+                                                  return "bg-red-500" // Domination
+                                                case 8200:
+                                                  return "bg-blue-500" // Sorcery
+                                                case 8300:
+                                                  return "bg-teal-500" // Inspiration
+                                                case 8400:
+                                                  return "bg-green-500" // Resolve
+                                                default:
+                                                  return "bg-gray-500"
+                                              }
+                                            }
+
+                                            return (
+                                              <div
+                                                className={`w-5 h-5 rounded flex items-center justify-center ${getRuneColor(primaryStyle.style)}`}
+                                              >
+                                                <span
+                                                  className="text-xs font-bold text-white"
+                                                  style={{ fontSize: "8px" }}
+                                                  title={`${keystoneName || "Unknown Keystone"} (ID: ${keystoneId})`}
+                                                >
+                                                  {keystoneName
+                                                    ? keystoneName.slice(0, 2).toUpperCase()
+                                                    : keystoneId.toString().slice(-2)}
+                                                </span>
+                                              </div>
+                                            )
+                                          }
+                                          return (
+                                            <div className="w-5 h-5 bg-gray-200 rounded" title="No primary rune"></div>
+                                          )
+                                        })()}
+
+                                        {/* Secondary Rune Tree */}
+                                        {participant.perks.styles.length >= 2 &&
+                                          (() => {
+                                            const secondaryStyle = participant.perks.styles[1]
+                                            const styleIcon = runeStyles[secondaryStyle?.style]
+                                            return styleIcon ? (
+                                              <div className="w-5 h-5 rounded bg-blue-500 flex items-center justify-center relative">
+                                                <img
+                                                  src={`https://ddragon.leagueoflegends.com/cdn/img/perk-images/Styles/${styleIcon}.png`}
+                                                  alt="Secondary Rune Tree"
+                                                  className="w-full h-full rounded absolute inset-0"
+                                                  style={{ display: "none" }}
+                                                  onLoad={(e) => {
+                                                    e.target.style.display = "block"
+                                                    e.target.parentNode.style.backgroundColor = "transparent"
+                                                  }}
+                                                  onError={(e) => {
+                                                    e.target.style.display = "none"
+                                                  }}
+                                                />
+                                                <span
+                                                  className="text-xs font-bold text-white z-10"
+                                                  style={{ fontSize: "8px" }}
+                                                >
+                                                  {styleIcon ? styleIcon.split("_")[1].slice(0, 2).toUpperCase() : "S"}
+                                                </span>
+                                              </div>
+                                            ) : (
+                                              <div
+                                                className="w-5 h-5 bg-gray-200 rounded"
+                                                title="No secondary rune"
+                                              ></div>
+                                            )
+                                          })()}
+                                      </>
+                                    )}
+                                  </div>
+
+                                  {/* KDA */}
+                                  <div className="text-xs text-center min-w-[60px]">
+                                    <div className="font-medium">
+                                      {participant.kills}/{participant.deaths}/{participant.assists}
+                                    </div>
+                                    <div className="text-gray-500">
+                                      {(
+                                        (participant.kills + participant.assists) /
+                                        Math.max(1, participant.deaths)
+                                      ).toFixed(1)}{" "}
+                                      KDA
+                                    </div>
+                                  </div>
+
+                                  {/* CS and Vision Score */}
+                                  <div className="text-xs text-center min-w-[50px]">
+                                    <div className="font-medium">
+                                      {participant.totalMinionsKilled + participant.neutralMinionsKilled} CS
+                                    </div>
+                                    <div className="text-gray-500">VS: {participant.visionScore}</div>
+                                  </div>
+
+                                  {/* Items */}
+                                  <div className="flex space-x-1">
+                                    {[
+                                      participant.item0,
+                                      participant.item1,
+                                      participant.item2,
+                                      participant.item3,
+                                      participant.item4,
+                                      participant.item5,
+                                      participant.item6,
+                                    ]
+                                      .filter((id) => id > 0)
+                                      .slice(0, 6)
+                                      .map((id, i) => (
+                                        <img
+                                          key={i}
+                                          src={`https://ddragon.leagueoflegends.com/cdn/14.1.1/img/item/${id}.png`}
+                                          alt="Item"
+                                          className="w-5 h-5 rounded"
+                                          onError={(e) => {
+                                            e.target.style.display = "none"
+                                          }}
+                                        />
+                                      ))}
+                                  </div>
+                                </div>
+                              ))}
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </div>
               </div>
-            </div>
-          ))
+            )
+          })
         )}
       </div>
     </div>
