@@ -2,14 +2,14 @@
 
 import { useState, useEffect } from "react"
 import { useParams, Link } from "react-router-dom"
-import { ArrowLeft } from "lucide-react"
+import { ArrowLeft, Award, Star, Gift } from "lucide-react"
 import axios from "axios"
 import SummonerTabs from "../components/summonertabs"
 
-const SummonerChampionStats = () => {
+const SummonerChampionMastery = () => {
   const { region, summonerName } = useParams()
   const [summoner, setSummoner] = useState(null)
-  const [championStats, setChampionStats] = useState([])
+  const [championMastery, setChampionMastery] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
 
@@ -43,10 +43,13 @@ const SummonerChampionStats = () => {
 
         setSummoner(summonerData)
 
-        const statsRes = await axios.get(`/api/summoner/${region}/${summonerData.puuid}/champion-wins`)
-        setChampionStats(statsRes.data || [])
+        // IMPORTANT: Using summonerData.id (encryptedSummonerId) here per Riot’s API requirements.
+        const masteryRes = await axios.get(
+           `/api/summoner/${region}/${summonerData.puuid}/champion-mastery`
+        )
+        setChampionMastery(masteryRes.data || [])
       } catch (err) {
-        console.error("Error fetching champion stats:", err)
+        console.error("Error fetching champion mastery:", err)
         const errorMessage = err.response?.data?.error || err.message
 
         if (err.response?.status === 404) {
@@ -54,7 +57,7 @@ const SummonerChampionStats = () => {
         } else if (err.response?.status === 403) {
           setError(`API key invalid or expired. Please check your API key.`)
         } else {
-          setError(`Failed to load champion stats: ${errorMessage}`)
+          setError(`Failed to load champion mastery: ${errorMessage}`)
         }
       } finally {
         setLoading(false)
@@ -62,6 +65,45 @@ const SummonerChampionStats = () => {
     }
     fetchData()
   }, [region, summonerName])
+
+  const formatNumber = (num) => {
+    if (num >= 1000000) {
+      return (num / 1000000).toFixed(1) + "M"
+    } else if (num >= 1000) {
+      return (num / 1000).toFixed(1) + "K"
+    }
+    return num.toLocaleString()
+  }
+
+  const formatLastPlayed = (timestamp) => {
+    const date = new Date(timestamp)
+    const now = new Date()
+    const diffTime = Math.abs(now - date)
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24))
+
+    if (diffDays === 1) return "1 day ago"
+    if (diffDays < 30) return `${diffDays} days ago`
+    if (diffDays < 365) return `${Math.floor(diffDays / 30)} months ago`
+    return `${Math.floor(diffDays / 365)} years ago`
+  }
+
+  const getMasteryColor = (level) => {
+    switch (level) {
+      case 7:
+        return "from-yellow-400 to-yellow-600"
+      case 6:
+        return "from-purple-400 to-purple-600"
+      case 5:
+        return "from-blue-400 to-blue-600"
+      default:
+        return "from-gray-400 to-gray-600"
+    }
+  }
+
+  const getMasteryIcon = (level) => {
+    if (level >= 5) return <Award className="w-4 h-4" />
+    return <Star className="w-4 h-4" />
+  }
 
   if (loading) {
     return (
@@ -71,7 +113,7 @@ const SummonerChampionStats = () => {
         </Link>
         <div className="flex flex-col items-center justify-center py-20">
           <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500 mb-4"></div>
-          <p className="text-gray-500">Loading champion stats...</p>
+          <p className="text-gray-500">Loading champion mastery...</p>
         </div>
       </div>
     )
@@ -116,6 +158,11 @@ const SummonerChampionStats = () => {
       </div>
     )
   }
+
+  const totalMasteryPoints = championMastery.reduce((sum, champ) => sum + champ.championPoints, 0)
+  const level7Champions = championMastery.filter((champ) => champ.championLevel === 7).length
+  const level6Champions = championMastery.filter((champ) => champ.championLevel === 6).length
+  const level5Champions = championMastery.filter((champ) => champ.championLevel === 5).length
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
@@ -179,83 +226,113 @@ const SummonerChampionStats = () => {
       {/* Tabs */}
       <SummonerTabs region={region} summonerName={summonerName} />
 
-      {/* Champion Stats */}
-      <div className="space-y-4">
-        <h2 className="text-xl font-bold mb-4">Champion Win Rates (Ranked)</h2>
+      {/* Mastery Overview */}
+      <div className="bg-white rounded-lg shadow-md p-6 mb-6">
+        <h2 className="text-xl font-bold mb-4">Mastery Overview</h2>
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+          <div className="text-center">
+            <div className="text-2xl font-bold text-blue-600">{formatNumber(totalMasteryPoints)}</div>
+            <div className="text-sm text-gray-500">Total Points</div>
+          </div>
+          <div className="text-center">
+            <div className="text-2xl font-bold text-yellow-600">{level7Champions}</div>
+            <div className="text-sm text-gray-500">Level 7</div>
+          </div>
+          <div className="text-center">
+            <div className="text-2xl font-bold text-purple-600">{level6Champions}</div>
+            <div className="text-sm text-gray-500">Level 6</div>
+          </div>
+          <div className="text-center">
+            <div className="text-2xl font-bold text-blue-600">{level5Champions}</div>
+            <div className="text-sm text-gray-500">Level 5</div>
+          </div>
+        </div>
+      </div>
 
-        {championStats.length === 0 ? (
+      {/* Champion Mastery */}
+      <div className="space-y-4">
+        <h2 className="text-xl font-bold mb-4">Champion Mastery</h2>
+
+        {championMastery.length === 0 ? (
           <div className="bg-gray-50 rounded-lg p-8 text-center">
-            <p className="text-gray-500">No ranked data found.</p>
+            <p className="text-gray-500">No mastery data found.</p>
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {championStats
-              .sort((a, b) => b.games - a.games)
-              .map((champ) => (
-                <div key={champ.champion} className="bg-white rounded-lg shadow-md p-4">
-                  <div className="flex items-center gap-4 mb-4">
-                    <div className="w-12 h-12 rounded-full bg-gray-200 overflow-hidden">
-                      <img
-                        src={`https://ddragon.leagueoflegends.com/cdn/14.1.1/img/champion/${champ.champion}.png`}
-                        alt={champ.champion}
-                        className="w-full h-full object-cover"
-                        onError={(e) => {
-                          e.target.onerror = null
-                          e.target.src = `/placeholder.svg?height=48&width=48&text=${champ.champion.charAt(0)}`
-                        }}
-                      />
-                    </div>
-                    <h3 className="text-lg font-semibold">{champ.champion}</h3>
+            {championMastery.map((champ) => (
+              <div key={champ.championId} className="bg-white rounded-lg shadow-md p-4">
+                <div className="flex items-center gap-4 mb-4">
+                  <div className="w-12 h-12 rounded-full bg-gray-200 overflow-hidden">
+                    <img
+                      src={`https://ddragon.leagueoflegends.com/cdn/14.1.1/img/champion/${champ.championName}.png`}
+                      alt={champ.championName}
+                      className="w-full h-full object-cover"
+                      onError={(e) => {
+                        e.target.onerror = null
+                        e.target.src = `/placeholder.svg?height=48&width=48&text=${champ.championName.charAt(0)}`
+                      }}
+                    />
                   </div>
-
-                  <div className="grid grid-cols-2 gap-4 text-sm">
-                    <div className="flex items-center">
-                      <div className="w-4 h-4 mr-2 bg-blue-500 rounded-full"></div>
-                      <span>
-                        <strong>Games:</strong> {champ.games}
-                      </span>
-                    </div>
-                    <div className="flex items-center">
-                      <div className="w-4 h-4 mr-2 bg-green-500 rounded-full"></div>
-                      <span>
-                        <strong>Wins:</strong> {champ.wins}
-                      </span>
-                    </div>
-                    <div className="flex items-center">
-                      <div className="w-4 h-4 mr-2 bg-red-500 rounded-full"></div>
-                      <span>
-                        <strong>Losses:</strong> {champ.games - champ.wins}
-                      </span>
-                    </div>
-                    <div className="flex items-center">
-                      <div className="w-4 h-4 mr-2 bg-yellow-500 rounded-full"></div>
-                      <span>
-                        <strong>Win Rate:</strong> {((champ.wins / champ.games) * 100).toFixed(1)}%
-                      </span>
-                    </div>
-                  </div>
-
-                  {/* Win Rate Progress Bar */}
-                  <div className="mt-4">
-                    <div className="flex justify-between text-xs text-gray-500 mb-1">
-                      <span>Win Rate</span>
-                      <span>{((champ.wins / champ.games) * 100).toFixed(1)}%</span>
-                    </div>
-                    <div className="w-full bg-gray-200 rounded-full h-2">
-                      <div
-                        className={`h-2 rounded-full ${
-                          (champ.wins / champ.games) * 100 >= 60
-                            ? "bg-green-500"
-                            : (champ.wins / champ.games) * 100 >= 50
-                              ? "bg-yellow-500"
-                              : "bg-red-500"
-                        }`}
-                        style={{ width: `${(champ.wins / champ.games) * 100}%` }}
-                      ></div>
+                  <div className="flex-1">
+                    <h3 className="text-lg font-semibold">{champ.championName}</h3>
+                    <div
+                      className={`inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-bold text-white bg-gradient-to-r ${getMasteryColor(champ.championLevel)}`}
+                    >
+                      {getMasteryIcon(champ.championLevel)}
+                      Level {champ.championLevel}
                     </div>
                   </div>
                 </div>
-              ))}
+
+                <div className="space-y-3">
+                  <div className="flex justify-between items-center">
+                    <span className="text-sm text-gray-600">Mastery Points</span>
+                    <span className="font-bold text-blue-600">{formatNumber(champ.championPoints)}</span>
+                  </div>
+
+                  {champ.championLevel < 5 && (
+                    <div className="space-y-1">
+                      <div className="flex justify-between text-xs text-gray-500">
+                        <span>Progress to Level {champ.championLevel + 1}</span>
+                        <span>
+                          {formatNumber(champ.championPointsSinceLastLevel)} /{" "}
+                          {formatNumber(champ.championPointsSinceLastLevel + champ.championPointsUntilNextLevel)}
+                        </span>
+                      </div>
+                      <div className="w-full bg-gray-200 rounded-full h-2">
+                        <div
+                          className="bg-blue-500 h-2 rounded-full"
+                          style={{
+                            width: `${(champ.championPointsSinceLastLevel / (champ.championPointsSinceLastLevel + champ.championPointsUntilNextLevel)) * 100}%`,
+                          }}
+                        ></div>
+                      </div>
+                    </div>
+                  )}
+
+                  {champ.championLevel >= 5 && (
+                    <div className="flex justify-between items-center">
+                      <span className="text-sm text-gray-600">Tokens</span>
+                      <span className="font-bold">{champ.tokensEarned}</span>
+                    </div>
+                  )}
+
+                  <div className="flex justify-between items-center">
+                    <span className="text-sm text-gray-600">Chest</span>
+                    <div className="flex items-center gap-1">
+                      <Gift className={`w-4 h-4 ${champ.chestGranted ? "text-green-500" : "text-gray-400"}`} />
+                      <span className={`text-sm ${champ.chestGranted ? "text-green-500" : "text-gray-400"}`}>
+                        {champ.chestGranted ? "Earned" : "Available"}
+                      </span>
+                    </div>
+                  </div>
+
+                  <div className="text-xs text-gray-500 text-center pt-2 border-t">
+                    Last played: {formatLastPlayed(champ.lastPlayTime)}
+                  </div>
+                </div>
+              </div>
+            ))}
           </div>
         )}
       </div>
@@ -263,4 +340,4 @@ const SummonerChampionStats = () => {
   )
 }
 
-export default SummonerChampionStats
+export default SummonerChampionMastery

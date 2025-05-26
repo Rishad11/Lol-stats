@@ -6,7 +6,7 @@ import ChampionsPage from "./pages/ChampionsPage"
 import ChampionDetailPage from "./pages/ChampionDetailPage"
 import LeaderboardsPage from "./pages/LeaderboardsPage"
 import SummonerOverview from "./pages/SummonerOverview"
-import SummonerChampionStats from "./pages/SummonerChampionStats"
+import SummonerChampionMastery from "./pages/SummonerChampionMastery"
 
 function App() {
   return (
@@ -17,7 +17,7 @@ function App() {
           <Routes>
             <Route path="/" element={<HomePage />} />
             <Route path="/summoner/:region/:summonerName" element={<SummonerOverview />} />
-            <Route path="/summoner/:region/:summonerName/champion-stats" element={<SummonerChampionStats />} />
+            <Route path="/summoner/:region/:summonerName/mastery" element={<SummonerChampionMastery />} />
             <Route path="/champions" element={<ChampionsPage />} />
             <Route path="/champions/:championId" element={<ChampionDetailPage />} />
             <Route path="/leaderboards" element={<LeaderboardsPage />} />
