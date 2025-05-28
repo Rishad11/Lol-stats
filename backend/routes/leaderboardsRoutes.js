@@ -1,95 +1,25 @@
-const express = require("express")
+// /routes/leaderboardsRoutes.js
+
+const express = require('express')
+const { getTopPlayersByRegion } = require('../services/leaderboardsService')
+
 const router = express.Router()
-const axios = require("axios")
-const cache = require("../utils/cache")
 
-// Environment variables
-const RIOT_API_KEY = process.env.RIOT_API_KEY
-
-// Base URLs for different Riot API endpoints
-const regionToHost = {
-  na1: "na1.api.riotgames.com",
-  euw1: "euw1.api.riotgames.com",
-  eun1: "eun1.api.riotgames.com",
-  kr: "kr.api.riotgames.com",
-  jp1: "jp1.api.riotgames.com",
-  br1: "br1.api.riotgames.com",
-  la1: "la1.api.riotgames.com",
-  la2: "la2.api.riotgames.com",
-  oc1: "oc1.api.riotgames.com",
-  ru: "ru.api.riotgames.com",
-  tr1: "tr1.api.riotgames.com",
-}
-
-// Get challenger leaderboard
-router.get("/:region", async (req, res) => {
+/**
+ * GET /api/leaderboards/:region
+ * Fetch the top N players for the given region (default N = 50)
+ */
+router.get('/:region', async (req, res, next) => {
   try {
-    const { region } = req.params
-
-    // Check if region is valid
-    if (!regionToHost[region]) {
-      return res.status(400).json({ error: "Invalid region" })
-    }
-
-    // Check cache first
-    const cacheKey = `leaderboard:${region}`
-    const cachedData = cache.get(cacheKey)
-
-    if (cachedData) {
-      return res.json(cachedData)
-    }
-
-    // Fetch challenger league
-    const challengerResponse = await axios.get(
-      `https://${regionToHost[region]}/lol/league/v4/challengerleagues/by-queue/RANKED_SOLO_5x5`,
-      { headers: { "X-Riot-Token": RIOT_API_KEY } },
-    )
-
-    // Fetch grandmaster league
-    const grandmasterResponse = await axios.get(
-      `https://${regionToHost[region]}/lol/league/v4/grandmasterleagues/by-queue/RANKED_SOLO_5x5`,
-      { headers: { "X-Riot-Token": RIOT_API_KEY } },
-    )
-
-    // Combine and sort entries
-    const challengerEntries = challengerResponse.data.entries.map((entry) => ({
-      ...entry,
-      tier: "CHALLENGER",
-    }))
-
-    const grandmasterEntries = grandmasterResponse.data.entries.map((entry) => ({
-      ...entry,
-      tier: "GRANDMASTER",
-    }))
-
-    const combinedEntries = [...challengerEntries, ...grandmasterEntries]
-
-    // Sort by LP
-    combinedEntries.sort((a, b) => b.leaguePoints - a.leaguePoints)
-
-    // Add rank
-    const rankedEntries = combinedEntries.map((entry, index) => ({
-      id: entry.summonerId,
-      rank: index + 1,
-      name: entry.summonerName,
-      tier: entry.tier,
-      leaguePoints: entry.leaguePoints,
-      wins: entry.wins,
-      losses: entry.losses,
-    }))
-
-    // Cache the result for 1 hour (3600 seconds)
-    cache.set(cacheKey, rankedEntries, 3600)
-
-    res.json(rankedEntries)
-  } catch (error) {
-    console.error("Error fetching leaderboards:", error.response?.data || error.message)
-
-    if (error.response?.status === 403) {
-      return res.status(403).json({ error: "API key invalid or expired" })
-    }
-
-    res.status(500).json({ error: "Failed to fetch leaderboards" })
+    // Disable cache: force fresh response every time.
+    res.set("Cache-Control", "no-store");
+    res.removeHeader("ETag");
+    const { region } = req.params;
+    const limit = Number(req.query.limit) || 1;
+    const players = await getTopPlayersByRegion(region, limit);
+    res.json(players); // send the mapped array directly
+  } catch (err) {
+    next(err);
   }
 })
 

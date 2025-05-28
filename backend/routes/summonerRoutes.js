@@ -2,6 +2,7 @@ const express = require("express")
 const axios = require("axios")
 const cache = require("../utils/cache")
 const { getMatchIdsByPUUID, getMatchDetails } = require("../services/riotApi")
+const { fetchSummonerByPUUID } = require("../services/summonerService");
 
 const router = express.Router()
 
@@ -27,18 +28,14 @@ router.get("/:region/:summonerName", async (req, res) => {
 
 // ----- Get summoner by PUUID -----
 router.get("/by-puuid/:region/:puuid", async (req, res) => {
-  const { region, puuid } = req.params
   try {
-    const response = await axios.get(
-      `https://${region}.api.riotgames.com/lol/summoner/v4/summoners/by-puuid/${puuid}`,
-      { headers: { "X-Riot-Token": process.env.RIOT_API_KEY } },
-    )
-    res.json(response.data)
-  } catch (error) {
-    console.error("Error fetching summoner by PUUID:", error.response?.data || error.message)
-    res.status(error.response?.status || 500).json({ error: error.response?.data || "Internal server error" })
+    const summ = await fetchSummonerByPUUID(req.params.region, req.params.puuid);
+    res.json(summ);
+  } catch (err) {
+    console.error("Error fetching summoner by PUUID:", err.message);
+    res.status(err.response?.status || 500).json({ error: "Internal server error" });
   }
-})
+});
 
 // ----- Get rank data by summoner ID -----
 router.get("/:region/:summonerId/rank", async (req, res) => {

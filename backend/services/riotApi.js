@@ -45,4 +45,57 @@ async function getMatchDetails(region, matchId) {
   return res.data;
 }
 
-module.exports = { getMatchIdsByPUUID, getMatchDetails };
+ /**
+  * Fetch Challenger league entries for a given platform.
+  * @param {string} platform – e.g. "NA1", "EUW1", etc.
+  */
+ async function getChallengerLeague(platform) {
+   const url = `https://${platform}.api.riotgames.com/lol/league/v4/challengerleagues/by-queue/RANKED_SOLO_5x5`;
+   const res = await axios.get(url, {
+     headers: { "X-Riot-Token": process.env.RIOT_API_KEY },
+   });
+   return res.data;
+ }
+
+/**
+ * Fetch a summoner’s profile by encrypted Summoner ID.
+ * @param {string} platform – e.g. "NA1", "EUW1", etc.
+ * @param {string} summonerId – encrypted Summoner ID
+ */
+async function getSummonerById(platform, summonerId) {
+  const url = `https://${platform}.api.riotgames.com/lol/summoner/v4/summoners/${summonerId}`;
+  const res = await axios.get(url, { headers: { "X-Riot-Token": process.env.RIOT_API_KEY } });
+  return res.data; // { id, accountId, puuid, name, profileIconId, ... }
+}
+
+/**
+ * Fetch a summoner's display name by PUUID using the platform's host.
+ * @param {string} platform - e.g. "NA1", "EUW1", etc.
+ * @param {string} puuid
+ * @returns {Promise<string>} the summoner's name
+ */
+async function getSummonerNameByPUUID(platform, puuid) {
+  const host = platform.toLowerCase() + ".api.riotgames.com";
+  const url = `https://${host}/lol/summoner/v4/summoners/by-puuid/${puuid}`;
+  console.log("🔍 Fetching Summoner name:", { platform, puuid, url });
+  try {
+    const { data } = await axios.get(url, {
+      headers: { "X-Riot-Token": process.env.RIOT_API_KEY }
+    });
+    console.log("✅  Summoner API response name:", data.name);
+    return data.name;
+  } catch (err) {
+    console.error("❌  Summoner API error:", err.response?.status, err.response?.data);
+    throw err;
+  }
+}
+
+module.exports = {
+  getMatchIdsByPUUID,
+  getMatchDetails,
+  getChallengerLeague,
+  getSummonerById, // added helper
+  getSummonerNameByPUUID, // added helper
+};
+
+

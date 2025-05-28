@@ -10,13 +10,14 @@ const LeaderboardsPage = () => {
 
   useEffect(() => {
     const fetchLeaderboards = async () => {
+      setLoading(true)
       try {
-        setLoading(true)
-        // In a real app, this would be an actual API call
-        const response = await fetch(`/api/leaderboards/${region}`)
-        if (!response.ok) throw new Error("Failed to fetch leaderboards")
-
+        const response = await fetch(`/api/leaderboards/${region}?limit=10`, {
+          cache: "no-cache",
+        })
+        console.log("HTTP status:", response.status, response.statusText)
         const data = await response.json()
+        console.log("📥 Leaderboard payload in React:", data)
         setPlayers(data)
       } catch (error) {
         console.error("Error fetching leaderboards:", error)
@@ -25,23 +26,8 @@ const LeaderboardsPage = () => {
       }
     }
 
+    // Re-fetch whenever `region` changes
     fetchLeaderboards()
-
-    // For development, use mock data
-    const mockPlayers = Array(100)
-      .fill(null)
-      .map((_, i) => ({
-        id: `player-${i}`,
-        rank: i + 1,
-        name: `Player${i + 1}`,
-        tier: i < 10 ? "CHALLENGER" : i < 50 ? "GRANDMASTER" : "MASTER",
-        leaguePoints: 1000 - i * 8 + Math.floor(Math.random() * 30),
-        wins: 100 + Math.floor(Math.random() * 200),
-        losses: 50 + Math.floor(Math.random() * 150),
-      }))
-
-    setPlayers(mockPlayers)
-    setLoading(false)
   }, [region])
 
   const regions = [
