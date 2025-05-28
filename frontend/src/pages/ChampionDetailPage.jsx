@@ -103,26 +103,6 @@ const ChampionDetailPage = () => {
                 </span>
               ))}
           </div>
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 bg-white bg-opacity-10 backdrop-blur-sm p-4 rounded-lg">
-            <div className="text-center">
-              <div className="text-white text-sm mb-1">Win Rate</div>
-              <div className="text-xl font-bold text-white">{champion.winRate}%</div>
-            </div>
-            <div className="text-center">
-              <div className="text-white text-sm mb-1">Pick Rate</div>
-              <div className="text-xl font-bold text-white">{champion.pickRate}%</div>
-            </div>
-            <div className="text-center">
-              <div className="text-white text-sm mb-1">Ban Rate</div>
-              <div className="text-xl font-bold text-white">{champion.banRate}%</div>
-            </div>
-            <div className="text-center">
-              <div className="text-white text-sm mb-1">Roles</div>
-              <div className="text-xl font-bold text-white">
-                {champion.roles && champion.roles.length > 0 ? champion.roles.join(", ") : "N/A"}
-              </div>
-            </div>
-          </div>
         </div>
       </div>
 
@@ -169,20 +149,22 @@ const ChampionDetailPage = () => {
             <h2 className="text-2xl font-bold mb-4">Lore</h2>
             <p className="text-gray-700 mb-6">{champion.lore}</p>
 
-            <h3 className="text-xl font-bold mb-3">Recommended Roles</h3>
+            <h3 className="text-xl font-bold mb-3">Champion Type</h3>
             <div className="flex flex-wrap gap-2 mb-6">
-              {champion.roles &&
-                champion.roles.map((role) => (
-                  <div key={role} className="flex items-center bg-gray-100 px-3 py-2 rounded-lg">
-                    {role === "TOP" && <Sword className="h-5 w-5 mr-2 text-red-500" />}
-                    {role === "JUNGLE" && <Zap className="h-5 w-5 mr-2 text-green-500" />}
-                    {role === "MID" && <Sword className="h-5 w-5 mr-2 text-blue-500" />}
-                    {role === "ADC" && <Sword className="h-5 w-5 mr-2 text-yellow-500" />}
-                    {role === "SUPPORT" && <Shield className="h-5 w-5 mr-2 text-purple-500" />}
-                    <span>{role}</span>
+              {champion.tags &&
+                champion.tags.map((tag) => (
+                  <div key={tag} className="flex items-center bg-gray-100 px-3 py-2 rounded-lg">
+                    <span>{tag}</span>
                   </div>
                 ))}
             </div>
+
+            {champion.blurb && (
+              <div>
+                <h3 className="text-xl font-bold mb-3">Summary</h3>
+                <p className="text-gray-700">{champion.blurb}</p>
+              </div>
+            )}
           </div>
         )}
 
@@ -191,19 +173,21 @@ const ChampionDetailPage = () => {
             <h2 className="text-2xl font-bold mb-4">Abilities</h2>
 
             {/* Passive */}
-            <div className="mb-6 p-4 border border-gray-200 rounded-lg">
-              <div className="flex items-start">
-                <img
-                  src={champion.passive.image || "/placeholder.svg"}
-                  alt={champion.passive.name}
-                  className="w-12 h-12 rounded mr-4"
-                />
-                <div>
-                  <h3 className="text-lg font-bold">Passive: {champion.passive.name}</h3>
-                  <p className="text-gray-700">{champion.passive.description}</p>
+            {champion.passive && (
+              <div className="mb-6 p-4 border border-gray-200 rounded-lg">
+                <div className="flex items-start">
+                  <img
+                    src={champion.passive.image || "/placeholder.svg"}
+                    alt={champion.passive.name}
+                    className="w-12 h-12 rounded mr-4"
+                  />
+                  <div>
+                    <h3 className="text-lg font-bold">Passive: {champion.passive.name}</h3>
+                    <p className="text-gray-700">{champion.passive.description}</p>
+                  </div>
                 </div>
               </div>
-            </div>
+            )}
 
             {/* Spells */}
             {champion.spells &&
@@ -292,6 +276,46 @@ const ChampionDetailPage = () => {
                     <span className="font-medium">
                       {champion.stats.spellblock} (+{champion.stats.spellblockperlevel} per level)
                     </span>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <div className="flex items-center">
+                      <Zap className="h-5 w-5 mr-2 text-blue-500" />
+                      <span>Movement Speed</span>
+                    </div>
+                    <span className="font-medium">{champion.stats.movespeed}</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Additional Stats */}
+            <div className="mt-6">
+              <h3 className="text-lg font-bold mb-3">Resource & Other Stats</h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <div className="flex justify-between items-center">
+                    <span>Mana</span>
+                    <span className="font-medium">
+                      {champion.stats.mp} (+{champion.stats.mpperlevel} per level)
+                    </span>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <span>Mana Regen</span>
+                    <span className="font-medium">
+                      {champion.stats.mpregen} (+{champion.stats.mpregenperlevel} per level)
+                    </span>
+                  </div>
+                </div>
+                <div className="space-y-2">
+                  <div className="flex justify-between items-center">
+                    <span>Health Regen</span>
+                    <span className="font-medium">
+                      {champion.stats.hpregen} (+{champion.stats.hpregenperlevel} per level)
+                    </span>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <span>Crit Chance</span>
+                    <span className="font-medium">{champion.stats.crit}%</span>
                   </div>
                 </div>
               </div>

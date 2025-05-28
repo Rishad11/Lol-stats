@@ -11,7 +11,7 @@ const ChampionsPage = () => {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
   const [searchQuery, setSearchQuery] = useState("")
-  const [roleFilter, setRoleFilter] = useState("all")
+  const [tagFilter, setTagFilter] = useState("all")
   const location = useLocation()
 
   useEffect(() => {
@@ -35,7 +35,6 @@ const ChampionsPage = () => {
       } catch (error) {
         console.error("Error fetching champions:", error)
         setError("Failed to load champions. Please try again later.")
-        // Initialize with empty array on error
         setChampions([])
         setFilteredChampions([])
       } finally {
@@ -47,7 +46,6 @@ const ChampionsPage = () => {
   }, [])
 
   useEffect(() => {
-    // Make sure champions is defined before filtering
     if (!champions || champions.length === 0) {
       setFilteredChampions([])
       return
@@ -60,22 +58,18 @@ const ChampionsPage = () => {
       filtered = filtered.filter((champion) => champion.name.toLowerCase().includes(searchQuery.toLowerCase()))
     }
 
-    // Apply role filter
-    if (roleFilter !== "all") {
-      filtered = filtered.filter((champion) => champion.roles && champion.roles.includes(roleFilter))
+    // Apply tag filter
+    if (tagFilter !== "all") {
+      filtered = filtered.filter((champion) => champion.tags && champion.tags.includes(tagFilter))
     }
 
     setFilteredChampions(filtered)
-  }, [searchQuery, roleFilter, champions])
+  }, [searchQuery, tagFilter, champions])
 
-  const roles = [
-    { value: "all", label: "All Roles" },
-    { value: "TOP", label: "Top" },
-    { value: "JUNGLE", label: "Jungle" },
-    { value: "MID", label: "Mid" },
-    { value: "ADC", label: "ADC" },
-    { value: "SUPPORT", label: "Support" },
-  ]
+  // Get unique tags from all champions for filter dropdown
+  const availableTags = champions.length > 0 ? [...new Set(champions.flatMap((champion) => champion.tags || []))] : []
+
+  const tagOptions = [{ value: "all", label: "All Types" }, ...availableTags.map((tag) => ({ value: tag, label: tag }))]
 
   if (loading) {
     return (
@@ -110,114 +104,65 @@ const ChampionsPage = () => {
         </div>
 
         <select
-          value={roleFilter}
-          onChange={(e) => setRoleFilter(e.target.value)}
+          value={tagFilter}
+          onChange={(e) => setTagFilter(e.target.value)}
           className="rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
         >
-          {roles.map((role) => (
-            <option key={role.value} value={role.value}>
-              {role.label}
+          {tagOptions.map((option) => (
+            <option key={option.value} value={option.value}>
+              {option.label}
             </option>
           ))}
         </select>
       </div>
 
-      <div className="bg-white rounded-lg shadow-md overflow-hidden">
-        <table className="min-w-full divide-y divide-gray-200">
-          <thead className="bg-gray-50">
-            <tr>
-              <th
-                scope="col"
-                className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
-              >
-                Champion
-              </th>
-              <th
-                scope="col"
-                className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
-              >
-                Role
-              </th>
-              <th
-                scope="col"
-                className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
-              >
-                Win Rate
-              </th>
-              <th
-                scope="col"
-                className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
-              >
-                Pick Rate
-              </th>
-              <th
-                scope="col"
-                className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
-              >
-                Ban Rate
-              </th>
-            </tr>
-          </thead>
-          <tbody className="bg-white divide-y divide-gray-200">
-            {filteredChampions && filteredChampions.length > 0 ? (
-              filteredChampions.map((champion) => (
-                <tr key={champion.id} className="hover:bg-gray-50">
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="flex items-center">
-                      <div className="flex-shrink-0 h-10 w-10 rounded-full overflow-hidden">
-                        <img
-                          src={champion.image || `/placeholder.svg?height=40&width=40&text=${champion.name.charAt(0)}`}
-                          alt={champion.name}
-                          className="h-10 w-10 object-cover"
-                        />
-                      </div>
-                      <div className="ml-4">
-                        <Link
-                          to={`/champions/${champion.id}`}
-                          className="text-sm font-medium text-blue-600 hover:underline"
-                        >
-                          {champion.name}
-                        </Link>
-                        {champion.title && <p className="text-xs text-gray-500">{champion.title}</p>}
-                      </div>
-                    </div>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="flex flex-wrap gap-1">
-                      {champion.roles && champion.roles.length > 0 ? (
-                        champion.roles.map((role) => (
-                          <span key={role} className="px-2 py-1 text-xs rounded-full bg-gray-100">
-                            {role}
-                          </span>
-                        ))
-                      ) : (
-                        <span className="text-xs text-gray-500">-</span>
-                      )}
-                    </div>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="text-sm text-gray-900">{champion.winRate}%</div>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="text-sm text-gray-900">{champion.pickRate}%</div>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="text-sm text-gray-900">{champion.banRate}%</div>
-                  </td>
-                </tr>
-              ))
-            ) : (
-              <tr>
-                <td colSpan="5" className="px-6 py-4 text-center text-gray-500">
-                  {searchQuery || roleFilter !== "all"
-                    ? "No champions found. Try adjusting your filters."
-                    : "No champions available."}
-                </td>
-              </tr>
-            )}
-          </tbody>
-        </table>
+      {/* Champions Grid */}
+      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 xl:grid-cols-8 gap-4">
+        {filteredChampions && filteredChampions.length > 0 ? (
+          filteredChampions.map((champion) => (
+            <Link
+              key={champion.id}
+              to={`/champions/${champion.id}`}
+              className="bg-white rounded-lg shadow-md hover:shadow-lg transition-shadow duration-200 p-4 flex flex-col items-center text-center group"
+            >
+              <div className="w-16 h-16 mb-3 rounded-full overflow-hidden border-2 border-gray-200 group-hover:border-blue-400 transition-colors">
+                <img
+                  src={champion.image || `/placeholder.svg?height=64&width=64&text=${champion.name.charAt(0)}`}
+                  alt={champion.name}
+                  className="w-full h-full object-cover"
+                />
+              </div>
+              <h3 className="text-sm font-medium text-gray-900 group-hover:text-blue-600 transition-colors">
+                {champion.name}
+              </h3>
+              {champion.title && <p className="text-xs text-gray-500 mt-1 line-clamp-2">{champion.title}</p>}
+              {champion.tags && champion.tags.length > 0 && (
+                <div className="flex flex-wrap gap-1 mt-2">
+                  {champion.tags.slice(0, 2).map((tag) => (
+                    <span key={tag} className="px-2 py-1 text-xs rounded-full bg-gray-100 text-gray-600">
+                      {tag}
+                    </span>
+                  ))}
+                </div>
+              )}
+            </Link>
+          ))
+        ) : (
+          <div className="col-span-full text-center py-20">
+            <p className="text-gray-500">
+              {searchQuery || tagFilter !== "all"
+                ? "No champions found. Try adjusting your filters."
+                : "No champions available."}
+            </p>
+          </div>
+        )}
       </div>
+
+      {filteredChampions.length > 0 && (
+        <div className="mt-8 text-center text-sm text-gray-500">
+          Showing {filteredChampions.length} of {champions.length} champions
+        </div>
+      )}
     </div>
   )
 }
