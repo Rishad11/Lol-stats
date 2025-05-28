@@ -8,6 +8,16 @@ const LeaderboardsPage = () => {
   const [loading, setLoading] = useState(true)
   const [region, setRegion] = useState("na")
 
+  // map region keys -> Riot platform codes and derive lowercase platform code for routing
+  const regionPlatformMap = {
+    na:   "NA1",
+    euw:  "EUW1",
+    eune: "EUN1",
+    kr:   "KR",
+    jp:   "JP1",
+  }
+  const platformCode = regionPlatformMap[region.toLowerCase()]?.toLowerCase()
+
   useEffect(() => {
     const fetchLeaderboards = async () => {
       setLoading(true)
@@ -77,40 +87,22 @@ const LeaderboardsPage = () => {
         <table className="min-w-full divide-y divide-gray-200">
           <thead className="bg-gray-50">
             <tr>
-              <th
-                scope="col"
-                className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
-              >
+              <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                 Rank
               </th>
-              <th
-                scope="col"
-                className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
-              >
+              <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                 Summoner
               </th>
-              <th
-                scope="col"
-                className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
-              >
+              <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                 Tier
               </th>
-              <th
-                scope="col"
-                className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
-              >
+              <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                 LP
               </th>
-              <th
-                scope="col"
-                className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
-              >
+              <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                 Win Rate
               </th>
-              <th
-                scope="col"
-                className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
-              >
+              <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                 W/L
               </th>
             </tr>
@@ -122,8 +114,9 @@ const LeaderboardsPage = () => {
                   <div className="text-sm font-medium text-gray-900">#{player.rank}</div>
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap">
+                  {/* Navigate by PUUID for search consistency using the derived platform code */}
                   <Link
-                    to={`/summoner/${region}/${player.name}`}
+                    to={`/summoner/${platformCode}/${encodeURIComponent(player.name)}`}
                     className="text-sm font-medium text-blue-600 hover:underline"
                   >
                     {player.name}

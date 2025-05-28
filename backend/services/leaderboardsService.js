@@ -27,6 +27,7 @@ async function getTopPlayersByRegion(region, limit = 50) {
       const { gameName, tagLine } = await fetchRiotIdByPUUID(platform, e.puuid);
       return {
         id:           e.summonerId,
+        puuid:        e.puuid,          // ← added puuid
         rank:         i + 1,
         name:         `${gameName}#${tagLine}`, // display as GameName#TagLine
         tier,
