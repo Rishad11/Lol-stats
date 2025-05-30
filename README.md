@@ -133,4 +133,4 @@ This project is for educational use. Riot Games trademarks and data belong to Ri
 
 ## 🙌 Author
 
-* Built by \[Your Name] for educational evaluation
+* Built by Rishad11 for educational evaluation
