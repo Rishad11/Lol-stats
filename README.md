@@ -117,12 +117,6 @@ RIOT_API_KEY=your-key
 PORT=5000
 ```
 
-Frontend `.env` (optional):
-
-```
-VITE_API_BASE_URL=http://localhost:5000
-```
-
 ---
 
 ## 📄 License
