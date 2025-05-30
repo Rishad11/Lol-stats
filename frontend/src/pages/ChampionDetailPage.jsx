@@ -158,13 +158,6 @@ const ChampionDetailPage = () => {
                   </div>
                 ))}
             </div>
-
-            {champion.blurb && (
-              <div>
-                <h3 className="text-xl font-bold mb-3">Summary</h3>
-                <p className="text-gray-700">{champion.blurb}</p>
-              </div>
-            )}
           </div>
         )}
 
