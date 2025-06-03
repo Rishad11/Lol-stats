@@ -50,13 +50,6 @@ const keystoneRunes = {
   8351: "GlacialAugment",
   8360: "UnsealedSpellbook",
   8369: "FirstStrike",
-  8326: "UnsealedSpellbook",
-  8358: "MasterKey",
-  8359: "Kleptomancy",
-  9101: "Overheal",
-  9111: "Triumph",
-  8143: "SuddenImpact",
-  8136: "CheapShot",
 }
 
 // Game mode mappings
@@ -228,8 +221,6 @@ const SummonerOverview = () => {
   // Calculate stats from match history
   const totalGames = matches.length
   const wins = matches.filter((match) => match.win).length
-  const losses = totalGames - wins
-  const winRateFromMatches = totalGames > 0 ? Math.round((wins / totalGames) * 100) : 0
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
@@ -512,6 +503,20 @@ const SummonerOverview = () => {
                                     })}
                                   </div>
 
+                                  {/* Debug info - remove this after fixing */}
+                                  {(() => {
+                                    const primaryStyle = participant.perks?.styles?.[0]
+                                    const keystoneId = primaryStyle?.selections?.[0]?.perk
+                                    const secondaryStyle = participant.perks?.styles?.[1]
+                                    const secondaryId = secondaryStyle?.style
+
+                                    console.log(
+                                      `Player ${participant.riotIdGameName || participant.summonerName}: Keystone ${keystoneId}, Secondary ${secondaryId}`,
+                                    )
+
+                                    return null // Don't render anything, just for debugging
+                                  })()}
+
                                   {/* Primary and Secondary Runes */}
                                   <div className="flex space-x-1">
                                     {participant.perks?.styles?.length >= 1 && (
@@ -523,37 +528,61 @@ const SummonerOverview = () => {
                                             const keystoneId = primaryStyle.selections[0].perk
                                             const keystoneName = keystoneRunes[keystoneId]
 
-                                            // Define colors for different rune trees
-                                            const getRuneColor = (styleId) => {
-                                              switch (styleId) {
-                                                case 8000:
-                                                  return "bg-yellow-500" // Precision
-                                                case 8100:
-                                                  return "bg-red-500" // Domination
-                                                case 8200:
-                                                  return "bg-blue-500" // Sorcery
-                                                case 8300:
-                                                  return "bg-teal-500" // Inspiration
-                                                case 8400:
-                                                  return "bg-green-500" // Resolve
-                                                default:
-                                                  return "bg-gray-500"
-                                              }
-                                            }
-
                                             return (
                                               <div
-                                                className={`w-5 h-5 rounded flex items-center justify-center ${getRuneColor(primaryStyle.style)}`}
+                                                className="w-5 h-5 rounded bg-gray-200 overflow-hidden"
+                                                title={`Keystone: ${keystoneName || keystoneId}`}
                                               >
-                                                <span
-                                                  className="text-xs font-bold text-white"
-                                                  style={{ fontSize: "8px" }}
-                                                  title={`${keystoneName || "Unknown Keystone"} (ID: ${keystoneId})`}
-                                                >
-                                                  {keystoneName
-                                                    ? keystoneName.slice(0, 2).toUpperCase()
-                                                    : keystoneId.toString().slice(-2)}
-                                                </span>
+                                                <img
+                                                  src={`https://ddragon.leagueoflegends.com/cdn/img/perk-images/Styles/Precision/${keystoneName}/${keystoneName}.png`}
+                                                  alt={keystoneName || "Keystone"}
+                                                  className="w-full h-full object-cover"
+                                                  onError={(e) => {
+                                                    // Try different tree paths based on keystone ID
+                                                    const getKeystoneTree = (id) => {
+                                                      if ([8005, 8008, 8021, 8010].includes(id)) return "Precision"
+                                                      if ([8112, 8124, 8128, 9923].includes(id)) return "Domination"
+                                                      if ([8214, 8229, 8230].includes(id)) return "Sorcery"
+                                                      if ([8351, 8360, 8369].includes(id)) return "Inspiration"
+                                                      if ([8437, 8439, 8465].includes(id)) return "Resolve"
+                                                      return "Precision" // default
+                                                    }
+
+                                                    const tree = getKeystoneTree(keystoneId)
+                                                    const altUrl = `https://ddragon.leagueoflegends.com/cdn/img/perk-images/Styles/${tree}/${keystoneName}/${keystoneName}.png`
+
+                                                    if (e.target.src !== altUrl && keystoneName) {
+                                                      e.target.src = altUrl
+                                                    } else {
+                                                      // Final fallback - try direct keystone ID
+                                                      const directUrl = `https://ddragon.leagueoflegends.com/cdn/img/perk-images/Styles/RunesReforged/Keystone/${keystoneId}.png`
+                                                      if (e.target.src !== directUrl) {
+                                                        e.target.src = directUrl
+                                                      } else {
+                                                        // Show colored fallback
+                                                        e.target.style.display = "none"
+                                                        const getRuneColor = (styleId) => {
+                                                          switch (styleId) {
+                                                            case 8000:
+                                                              return "bg-yellow-500" // Precision
+                                                            case 8100:
+                                                              return "bg-red-500" // Domination
+                                                            case 8200:
+                                                              return "bg-blue-500" // Sorcery
+                                                            case 8300:
+                                                              return "bg-teal-500" // Inspiration
+                                                            case 8400:
+                                                              return "bg-green-500" // Resolve
+                                                            default:
+                                                              return "bg-gray-500"
+                                                          }
+                                                        }
+                                                        e.target.parentNode.className = `w-5 h-5 rounded flex items-center justify-center ${getRuneColor(primaryStyle.style)}`
+                                                        e.target.parentNode.innerHTML = `<span class="text-xs font-bold text-white" style="font-size: 7px;" title="Keystone ${keystoneId}">${keystoneName ? keystoneName.slice(0, 2).toUpperCase() : keystoneId.toString().slice(-2)}</span>`
+                                                      }
+                                                    }
+                                                  }}
+                                                />
                                               </div>
                                             )
                                           }
@@ -566,34 +595,57 @@ const SummonerOverview = () => {
                                         {participant.perks.styles.length >= 2 &&
                                           (() => {
                                             const secondaryStyle = participant.perks.styles[1]
-                                            const styleIcon = runeStyles[secondaryStyle?.style]
-                                            return styleIcon ? (
-                                              <div className="w-5 h-5 rounded bg-blue-500 flex items-center justify-center relative">
+                                            const styleId = secondaryStyle?.style
+                                            const styleIcon = runeStyles[styleId]
+
+                                            return (
+                                              <div
+                                                className="w-5 h-5 rounded bg-gray-200 overflow-hidden"
+                                                title={`Secondary Tree: ${styleId}`}
+                                              >
                                                 <img
                                                   src={`https://ddragon.leagueoflegends.com/cdn/img/perk-images/Styles/${styleIcon}.png`}
                                                   alt="Secondary Rune Tree"
-                                                  className="w-full h-full rounded absolute inset-0"
-                                                  style={{ display: "none" }}
-                                                  onLoad={(e) => {
-                                                    e.target.style.display = "block"
-                                                    e.target.parentNode.style.backgroundColor = "transparent"
-                                                  }}
+                                                  className="w-full h-full object-cover"
                                                   onError={(e) => {
                                                     e.target.style.display = "none"
+                                                    const getTreeColor = (id) => {
+                                                      switch (id) {
+                                                        case 8000:
+                                                          return "bg-yellow-500" // Precision
+                                                        case 8100:
+                                                          return "bg-red-500" // Domination
+                                                        case 8200:
+                                                          return "bg-blue-500" // Sorcery
+                                                        case 8300:
+                                                          return "bg-teal-500" // Inspiration
+                                                        case 8400:
+                                                          return "bg-green-500" // Resolve
+                                                        default:
+                                                          return "bg-gray-500"
+                                                      }
+                                                    }
+                                                    const getTreeName = (id) => {
+                                                      switch (id) {
+                                                        case 8000:
+                                                          return "PR" // Precision
+                                                        case 8100:
+                                                          return "DO" // Domination
+                                                        case 8200:
+                                                          return "SO" // Sorcery
+                                                        case 8300:
+                                                          return "IN" // Inspiration
+                                                        case 8400:
+                                                          return "RE" // Resolve
+                                                        default:
+                                                          return "??"
+                                                      }
+                                                    }
+                                                    e.target.parentNode.className = `w-5 h-5 rounded flex items-center justify-center ${getTreeColor(styleId)}`
+                                                    e.target.parentNode.innerHTML = `<span class="text-xs font-bold text-white" style="font-size: 7px;" title="Tree ${styleId}">${getTreeName(styleId)}</span>`
                                                   }}
                                                 />
-                                                <span
-                                                  className="text-xs font-bold text-white z-10"
-                                                  style={{ fontSize: "8px" }}
-                                                >
-                                                  {styleIcon ? styleIcon.split("_")[1].slice(0, 2).toUpperCase() : "S"}
-                                                </span>
                                               </div>
-                                            ) : (
-                                              <div
-                                                className="w-5 h-5 bg-gray-200 rounded"
-                                                title="No secondary rune"
-                                              ></div>
                                             )
                                           })()}
                                       </>
