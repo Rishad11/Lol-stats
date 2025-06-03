@@ -2,13 +2,10 @@
 
 import { useState, useEffect } from "react"
 import { useNavigate } from "react-router-dom"
-import { Search } from "lucide-react"
 import axios from "axios"
+import UnifiedSearchBar from "../components/UnifiedSearchBar"
 
 const HomePage = () => {
-  const [searchQuery, setSearchQuery] = useState("")
-  const [region, setRegion] = useState("na1")
-  const [regions, setRegions] = useState([])
   const [popularChampions, setPopularChampions] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
@@ -19,14 +16,6 @@ const HomePage = () => {
       try {
         setLoading(true)
         setError(null)
-
-        // Fetch regions
-        const regionsResponse = await axios.get("/api/regions")
-        setRegions(regionsResponse.data)
-
-        if (regionsResponse.data.length > 0) {
-          setRegion(regionsResponse.data[0].code)
-        }
 
         // Fetch popular champions
         const championsResponse = await axios.get("/api/champions")
@@ -56,13 +45,6 @@ const HomePage = () => {
     fetchData()
   }, [])
 
-  const handleSearch = (e) => {
-    e.preventDefault()
-    if (searchQuery.trim()) {
-      navigate(`/summoner/${region}/${encodeURIComponent(searchQuery.trim())}`)
-    }
-  }
-
   return (
     <div className="min-h-screen bg-gradient-to-b from-blue-500 to-blue-700">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
@@ -72,7 +54,7 @@ const HomePage = () => {
           </div>
           <h1 className="text-4xl font-extrabold text-white sm:text-5xl md:text-6xl">LoL Stats Tracker</h1>
           <p className="mt-3 max-w-md mx-auto text-base text-blue-100 sm:text-lg md:mt-5 md:text-xl">
-            Search for summoners, view match history, and track your performance in League of Legends.
+            Search for champions or players using Riot ID (name#tag).
           </p>
 
           {error && (
@@ -82,32 +64,7 @@ const HomePage = () => {
           )}
 
           <div className="mt-10 max-w-xl mx-auto">
-            <form onSubmit={handleSearch} className="flex shadow-lg rounded-lg overflow-hidden">
-              <select
-                value={region}
-                onChange={(e) => setRegion(e.target.value)}
-                className="px-4 py-3 bg-white text-gray-800 font-medium border-0"
-              >
-                {regions.map((region) => (
-                  <option key={region.code} value={region.code}>
-                    {region.shortName}
-                  </option>
-                ))}
-              </select>
-              <input
-                type="text"
-                placeholder="Search summoner name..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="flex-1 px-4 py-3 text-gray-800 focus:outline-none border-0"
-              />
-              <button
-                type="submit"
-                className="bg-blue-900 px-6 py-3 text-white font-medium hover:bg-blue-800 transition-colors"
-              >
-                <Search className="h-5 w-5" />
-              </button>
-            </form>
+            <UnifiedSearchBar placeholder="Search champions or Riot ID (name#tag)..." />
           </div>
 
           <div className="mt-16">

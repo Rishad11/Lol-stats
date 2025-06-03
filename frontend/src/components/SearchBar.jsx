@@ -74,7 +74,23 @@ const SearchBar = ({ type = "summoner", placeholder = "Search..." }) => {
           params: { query },
         })
       } else {
-        // Summoner search
+        // For summoner search, only search if we have a complete Riot ID format or a reasonable summoner name
+        if (query.includes("#") && query.split("#").length === 2) {
+          // Complete Riot ID format
+          const [gameName, tagLine] = query.split("#")
+          if (gameName.length < 3 || tagLine.length < 2) {
+            // Don't search with incomplete Riot ID
+            setResults([])
+            setShowResults(false)
+            return
+          }
+        } else if (query.length < 3) {
+          // Don't search with very short summoner names
+          setResults([])
+          setShowResults(false)
+          return
+        }
+
         response = await axios.get(`/api/search/summoners/${region}`, {
           params: { query },
         })
@@ -86,6 +102,10 @@ const SearchBar = ({ type = "summoner", placeholder = "Search..." }) => {
       console.error(`Error searching ${type}s:`, error)
       if (error.response?.status === 403) {
         setError("API key invalid or expired. Please check your API key.")
+      } else if (error.response?.status === 404) {
+        // Don't show error for not found, just show no results
+        setResults([])
+        setShowResults(true)
       } else {
         setError(`Failed to search ${type}s`)
       }
@@ -188,7 +208,7 @@ const SearchBar = ({ type = "summoner", placeholder = "Search..." }) => {
                   />
                 )}
                 <div>
-                  <div className="font-medium">
+                  <div className="font-medium text-gray-900">
                     {item.gameName && item.tagLine ? `${item.gameName}#${item.tagLine}` : item.name}
                   </div>
                   {item.title && <div className="text-xs text-gray-500">{item.title}</div>}

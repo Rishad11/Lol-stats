@@ -36,7 +36,6 @@ const LeaderboardsPage = () => {
       }
     }
 
-    // Re-fetch whenever `region` changes
     fetchLeaderboards()
   }, [region])
 

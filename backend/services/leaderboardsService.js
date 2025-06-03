@@ -10,26 +10,24 @@ const regionPlatformMap = {
   jp:   "JP1",
 };
 
-async function getTopPlayersByRegion(region, limit = 50) {
+async function getTopPlayersByRegion(region, limit = 10) {
   const platform = regionPlatformMap[region.toLowerCase()];
   if (!platform) throw new Error(`Unsupported region: ${region}`);
 
-  // 1) challenger list
   const url = `https://${platform.toLowerCase()}.api.riotgames.com/lol/league/v4/challengerleagues/by-queue/RANKED_SOLO_5x5`;
   const { data } = await axios.get(url, {
     headers: { "X-Riot-Token": process.env.RIOT_API_KEY },
   });
   const { tier, entries } = data;
 
-  // 2) resolve Riot IDs via our shared service to get GameName and tagLine
   const players = await Promise.all(
     entries.slice(0, limit).map(async (e, i) => {
       const { gameName, tagLine } = await fetchRiotIdByPUUID(platform, e.puuid);
       return {
         id:           e.summonerId,
-        puuid:        e.puuid,          // ← added puuid
+        puuid:        e.puuid,
         rank:         i + 1,
-        name:         `${gameName}#${tagLine}`, // display as GameName#TagLine
+        name:         `${gameName}#${tagLine}`,
         tier,
         leaguePoints: e.leaguePoints,
         wins:         e.wins,
@@ -37,7 +35,7 @@ async function getTopPlayersByRegion(region, limit = 50) {
       };
     })
   );
-  console.log("🏁 Final mapped players for", region, players);
+  console.log("Final mapped players for", region, players);
   return players;
 }
 

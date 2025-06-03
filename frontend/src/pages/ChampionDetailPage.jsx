@@ -80,10 +80,14 @@ const ChampionDetailPage = () => {
       {/* Champion Header */}
       <div className="relative rounded-lg overflow-hidden mb-8">
         <div className="absolute inset-0">
-          <img src={champion.splash || "/placeholder.svg"} alt={champion.name} className="w-full h-full object-cover" />
+          <img
+            src={champion.splash || "/placeholder.svg"}
+            alt={champion.name}
+            className="w-full h-full object-cover object-center"
+          />
           <div className="absolute inset-0 bg-gradient-to-t from-black to-transparent opacity-70"></div>
         </div>
-        <div className="relative px-8 py-16 sm:py-24 flex flex-col items-start">
+        <div className="relative px-8 py-20 sm:py-32 flex flex-col items-start">
           <div className="flex items-center mb-4">
             <img
               src={champion.image || "/placeholder.svg"}
@@ -169,11 +173,13 @@ const ChampionDetailPage = () => {
             {champion.passive && (
               <div className="mb-6 p-4 border border-gray-200 rounded-lg">
                 <div className="flex items-start">
-                  <img
-                    src={champion.passive.image || "/placeholder.svg"}
-                    alt={champion.passive.name}
-                    className="w-12 h-12 rounded mr-4"
-                  />
+                  <div className="w-12 h-12 rounded mr-4 flex-shrink-0 overflow-hidden bg-gray-100">
+                    <img
+                      src={champion.passive.image || "/placeholder.svg"}
+                      alt={champion.passive.name}
+                      className="w-full h-full object-cover"
+                    />
+                  </div>
                   <div>
                     <h3 className="text-lg font-bold">Passive: {champion.passive.name}</h3>
                     <p className="text-gray-700">{champion.passive.description}</p>
@@ -188,7 +194,13 @@ const ChampionDetailPage = () => {
                 <div key={spell.id} className="mb-6 p-4 border border-gray-200 rounded-lg">
                   <div className="flex items-start">
                     <div className="relative mr-4">
-                      <img src={spell.image || "/placeholder.svg"} alt={spell.name} className="w-12 h-12 rounded" />
+                      <div className="w-12 h-12 rounded overflow-hidden bg-gray-100 flex-shrink-0">
+                        <img
+                          src={spell.image || "/placeholder.svg"}
+                          alt={spell.name}
+                          className="w-full h-full object-cover"
+                        />
+                      </div>
                       <div className="absolute -top-2 -right-2 w-6 h-6 rounded-full bg-blue-500 text-white flex items-center justify-center text-xs font-bold">
                         {["Q", "W", "E", "R"][index]}
                       </div>

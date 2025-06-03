@@ -3,7 +3,7 @@
 import { useState } from "react"
 import { Link } from "react-router-dom"
 import { Menu, X } from "lucide-react"
-import SearchBar from "./SearchBar"
+import UnifiedSearchBar from "./UnifiedSearchBar"
 
 const Navbar = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false)
@@ -30,7 +30,9 @@ const Navbar = () => {
             </div>
           </div>
           <div className="hidden sm:flex items-center">
-            <SearchBar type="summoner" placeholder="Search summoner..." />
+            <div className="w-80">
+              <UnifiedSearchBar placeholder="Search champions or Riot ID..." />
+            </div>
           </div>
           <div className="flex items-center sm:hidden">
             <button
@@ -59,7 +61,7 @@ const Navbar = () => {
           </div>
           <div className="pt-4 pb-3 border-t border-blue-700">
             <div className="px-3">
-              <SearchBar type="summoner" placeholder="Search summoner..." />
+              <UnifiedSearchBar placeholder="Search champions or Riot ID..." />
             </div>
           </div>
         </div>

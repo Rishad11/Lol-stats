@@ -244,7 +244,7 @@ const SummonerOverview = () => {
             <div className="w-32 h-32 rounded-2xl bg-gradient-to-br from-blue-400 to-purple-600 p-1 shadow-lg">
               <div className="w-full h-full rounded-xl overflow-hidden bg-white">
                 <img
-                  src={`https://ddragon.leagueoflegends.com/cdn/14.1.1/img/profileicon/${summoner.profileIconId}.png`}
+                  src={`https://ddragon.leagueoflegends.com/cdn/15.11.1/img/profileicon/${summoner.profileIconId}.png`}
                   alt={summoner.searchedName}
                   className="w-full h-full object-cover"
                   onError={(e) => {
@@ -333,7 +333,7 @@ const SummonerOverview = () => {
                     <div className="flex-shrink-0">
                       <div className="w-16 h-16 rounded-full bg-gray-200 overflow-hidden">
                         <img
-                          src={`https://ddragon.leagueoflegends.com/cdn/14.1.1/img/champion/${match.champion}.png`}
+                          src={`https://ddragon.leagueoflegends.com/cdn/15.11.1/img/champion/${match.champion}.png`}
                           alt={match.champion}
                           className="w-full h-full object-cover"
                           onError={(e) => {
@@ -378,7 +378,7 @@ const SummonerOverview = () => {
                                 id > 0 ? (
                                   <img
                                     key={i}
-                                    src={`https://ddragon.leagueoflegends.com/cdn/14.1.1/img/item/${id}.png`}
+                                    src={`https://ddragon.leagueoflegends.com/cdn/15.11.1/img/item/${id}.png`}
                                     alt="Item"
                                     className="w-8 h-8 rounded border border-gray-200"
                                     onError={(e) => {
@@ -403,7 +403,7 @@ const SummonerOverview = () => {
                                 id && id > 0 ? (
                                   <img
                                     key={i}
-                                    src={`https://ddragon.leagueoflegends.com/cdn/14.1.1/img/item/${id}.png`}
+                                    src={`https://ddragon.leagueoflegends.com/cdn/15.11.1/img/item/${id}.png`}
                                     alt="Item"
                                     className="w-8 h-8 rounded border border-gray-200"
                                     onError={(e) => {
@@ -475,7 +475,7 @@ const SummonerOverview = () => {
                                   {/* Champion Image */}
                                   <div className="flex-shrink-0">
                                     <img
-                                      src={`https://ddragon.leagueoflegends.com/cdn/14.1.1/img/champion/${participant.championName}.png`}
+                                      src={`https://ddragon.leagueoflegends.com/cdn/15.11.1/img/champion/${participant.championName}.png`}
                                       alt={participant.championName}
                                       className="w-8 h-8 rounded"
                                       onError={(e) => {
@@ -499,7 +499,7 @@ const SummonerOverview = () => {
                                       return spellName ? (
                                         <img
                                           key={i}
-                                          src={`https://ddragon.leagueoflegends.com/cdn/14.1.1/img/spell/${spellName}.png`}
+                                          src={`https://ddragon.leagueoflegends.com/cdn/15.11.1/img/spell/${spellName}.png`}
                                           alt={`Summoner Spell ${spellId}`}
                                           className="w-5 h-5 rounded"
                                           onError={(e) => {
@@ -638,7 +638,7 @@ const SummonerOverview = () => {
                                       .map((id, i) => (
                                         <img
                                           key={i}
-                                          src={`https://ddragon.leagueoflegends.com/cdn/14.1.1/img/item/${id}.png`}
+                                          src={`https://ddragon.leagueoflegends.com/cdn/15.11.1/img/item/${id}.png`}
                                           alt="Item"
                                           className="w-5 h-5 rounded"
                                           onError={(e) => {
