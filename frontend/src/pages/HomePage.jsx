@@ -4,6 +4,7 @@ import { useState, useEffect } from "react"
 import { useNavigate } from "react-router-dom"
 import axios from "axios"
 import UnifiedSearchBar from "../components/UnifiedSearchBar"
+import logo from "../assets/logo.png";
 
 const HomePage = () => {
   const [popularChampions, setPopularChampions] = useState([])
@@ -50,7 +51,7 @@ const HomePage = () => {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
         <div className="text-center">
           <div className="flex justify-center mb-6">
-            <img src="/placeholder.svg" alt="LoL Stats Logo" className="h-24 w-auto" />
+            <img src={logo} alt="LoL Stats Logo" className="h-24 w-auto" />
           </div>
           <h1 className="text-4xl font-extrabold text-white sm:text-5xl md:text-6xl">LoL Stats Tracker</h1>
           <p className="mt-3 max-w-md mx-auto text-base text-blue-100 sm:text-lg md:mt-5 md:text-xl">

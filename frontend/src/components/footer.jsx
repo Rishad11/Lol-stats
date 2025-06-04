@@ -12,7 +12,7 @@ const Footer = () => {
               officially involved in producing or managing League of Legends.
             </p>
           </div>
-          <div className="grid grid-cols-2 gap-8 sm:grid-cols-3">
+          <div className="grid grid-cols-2 gap-8 sm:grid-cols-3 ml-12">
             <div>
               <h3 className="text-sm font-semibold uppercase tracking-wider">Resources</h3>
               <ul className="mt-4 space-y-2">
@@ -26,32 +26,12 @@ const Footer = () => {
                     Leaderboards
                   </Link>
                 </li>
-                <li>
-                  <Link to="/stats" className="text-gray-400 hover:text-white">
-                    Statistics
-                  </Link>
-                </li>
-              </ul>
-            </div>
-            <div>
-              <h3 className="text-sm font-semibold uppercase tracking-wider">Legal</h3>
-              <ul className="mt-4 space-y-2">
-                <li>
-                  <Link to="/privacy" className="text-gray-400 hover:text-white">
-                    Privacy Policy
-                  </Link>
-                </li>
-                <li>
-                  <Link to="/terms" className="text-gray-400 hover:text-white">
-                    Terms of Service
-                  </Link>
-                </li>
               </ul>
             </div>
           </div>
         </div>
         <div className="mt-8 border-t border-gray-700 pt-8">
-          <p className="text-sm text-gray-400">&copy; {new Date().getFullYear()} LoL Stats. All rights reserved.</p>
+          <p className="text-sm text-gray-400">&copy; {new Date().getFullYear()} LoL Stats.</p>
         </div>
       </div>
     </footer>

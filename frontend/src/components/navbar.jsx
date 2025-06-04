@@ -14,7 +14,6 @@ const Navbar = () => {
         <div className="flex justify-between h-16">
           <div className="flex items-center">
             <Link to="/" className="flex-shrink-0 flex items-center">
-              <img className="h-8 w-auto" src="/placeholder.svg" alt="LoL Stats" />
               <span className="ml-2 text-xl font-bold">LoL Stats</span>
             </Link>
             <div className="hidden sm:ml-6 sm:flex sm:space-x-8">

@@ -218,10 +218,6 @@ const SummonerOverview = () => {
     )
   }
 
-  // Calculate stats from match history
-  const totalGames = matches.length
-  const wins = matches.filter((match) => match.win).length
-
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
       <Link to="/" className="inline-flex items-center text-blue-500 hover:underline mb-6">
