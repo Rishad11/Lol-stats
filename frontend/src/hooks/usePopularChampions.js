@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react"
 import { getChampions } from "../services/ddragonService"
-import { useDataDragon } from "./useDataDragon"
+import { useDataDragon } from "./UseDataDragon"
 
 export const usePopularChampions = (count = 5) => {
   const { version, loading: ddLoading } = useDataDragon()

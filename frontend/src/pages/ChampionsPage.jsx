@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useMemo } from "react"
 import { Link, useLocation } from "react-router-dom"
-import { useDataDragon } from "../hooks/useDataDragon"
+import { useDataDragon } from "../hooks/UseDataDragon"
 import { useChampions } from "../hooks/useChampions"
 import SearchBar from "../components/SearchBar"
 

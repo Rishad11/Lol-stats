@@ -2,7 +2,7 @@
 
 import { useParams, Link } from "react-router-dom"
 import { ArrowLeft, Shield, Sword, Award, Users } from "lucide-react"
-import { useDataDragon } from "../hooks/useDataDragon"
+import { useDataDragon } from "../hooks/UseDataDragon"
 import { useSummoner } from "../hooks/useSummoner"
 import { useMatches } from "../hooks/useMatches"
 import { useMatchDetails } from "../hooks/useMatchDetails"

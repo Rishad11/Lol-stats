@@ -1,6 +1,6 @@
 "use client"
 import UnifiedSearchBar from "../components/UnifiedSearchBar"
-import { useDataDragon } from "../hooks/useDataDragon"
+import { useDataDragon } from "../hooks/UseDataDragon"
 import { usePopularChampions } from "../hooks/usePopularChampions"
 import logo from "../assets/logo.png"
 

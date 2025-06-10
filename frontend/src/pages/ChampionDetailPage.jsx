@@ -3,7 +3,7 @@
 import { useState } from "react"
 import { useParams, Link } from "react-router-dom"
 import { ArrowLeft, Shield, Sword, Heart, Zap } from "lucide-react"
-import { useDataDragon } from "../hooks/useDataDragon"
+import { useDataDragon } from "../hooks/UseDataDragon"
 import { useChampion } from "../hooks/useChampion"
 
 const ChampionDetailPage = () => {

@@ -2,7 +2,7 @@
 
 import { useParams, Link } from "react-router-dom"
 import { ArrowLeft, Trophy, Award, Star, Target, TrendingUp } from "lucide-react"
-import { useDataDragon } from "../hooks/useDataDragon"
+import { useDataDragon } from "../hooks/UseDataDragon"
 import { useSummoner } from "../hooks/useSummoner"
 import { useChampionMastery } from "../hooks/useChampionMastery"
 import { formatNumber } from "../utils/gameHelpers"
