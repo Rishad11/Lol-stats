@@ -3,7 +3,8 @@
 import { useState, useEffect } from "react"
 import { useParams, Link } from "react-router-dom"
 import { ArrowLeft, Shield, Sword, Heart, Zap } from "lucide-react"
-import axios from "axios"
+import { fetchChampion } from "../services/apiCalls"
+import { useDataDragon } from "../hooks/UseDataDragon"
 
 const ChampionDetailPage = () => {
   const { championId } = useParams()
@@ -12,14 +13,48 @@ const ChampionDetailPage = () => {
   const [error, setError] = useState(null)
   const [activeTab, setActiveTab] = useState("overview")
 
+  const {
+    version,
+    getChampionImageUrl,
+    getChampionSplashUrl,
+    getSpellImageUrl,
+    getPassiveImageUrl,
+    loading: ddLoading,
+  } = useDataDragon()
+
   useEffect(() => {
     const fetchChampionDetails = async () => {
+      if (!version) return // Wait for version to be loaded
+
       try {
         setLoading(true)
         setError(null)
 
-        const response = await axios.get(`/api/champions/${championId}`)
-        setChampion(response.data)
+        const response = await fetchChampion(championId, version)
+        const championData = response.data[championId]
+
+        if (championData) {
+          // Transform the data to match your existing structure
+          const transformedChampion = {
+            ...championData,
+            image: getChampionImageUrl(championId),
+            splash: getChampionSplashUrl(championId),
+            spells: championData.spells?.map((spell) => ({
+              ...spell,
+              image: getSpellImageUrl(spell.image?.full?.replace(".png", "")),
+            })),
+            passive: championData.passive
+              ? {
+                  ...championData.passive,
+                  image: getPassiveImageUrl(championData.passive.image?.full?.replace(".png", "")),
+                }
+              : null,
+          }
+
+          setChampion(transformedChampion)
+        } else {
+          setError("Champion not found")
+        }
       } catch (error) {
         console.error("Error fetching champion details:", error)
         setError("Failed to load champion details. Please try again later.")
@@ -28,10 +63,12 @@ const ChampionDetailPage = () => {
       }
     }
 
-    fetchChampionDetails()
-  }, [championId])
+    if (version && !ddLoading) {
+      fetchChampionDetails()
+    }
+  }, [championId, version, ddLoading])
 
-  if (loading) {
+  if (loading || ddLoading) {
     return (
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <Link to="/champions" className="inline-flex items-center text-blue-500 hover:underline mb-6">
@@ -229,7 +266,7 @@ const ChampionDetailPage = () => {
                       <span>Attack Damage</span>
                     </div>
                     <span className="font-medium">
-                      {champion.stats.attackdamage} (+{champion.stats.attackdamageperlevel} per level)
+                      {champion.stats?.attackdamage} (+{champion.stats?.attackdamageperlevel} per level)
                     </span>
                   </div>
                   <div className="flex justify-between items-center">
@@ -238,8 +275,8 @@ const ChampionDetailPage = () => {
                       <span>Attack Speed</span>
                     </div>
                     <span className="font-medium">
-                      {champion.stats.attackspeed.toFixed(3)} (+{(champion.stats.attackspeedperlevel / 100).toFixed(3)}{" "}
-                      per level)
+                      {champion.stats?.attackspeed?.toFixed(3)} (+
+                      {(champion.stats?.attackspeedperlevel / 100)?.toFixed(3)} per level)
                     </span>
                   </div>
                   <div className="flex justify-between items-center">
@@ -247,7 +284,7 @@ const ChampionDetailPage = () => {
                       <Sword className="h-5 w-5 mr-2 text-blue-500" />
                       <span>Attack Range</span>
                     </div>
-                    <span className="font-medium">{champion.stats.attackrange}</span>
+                    <span className="font-medium">{champion.stats?.attackrange}</span>
                   </div>
                 </div>
               </div>
@@ -261,7 +298,7 @@ const ChampionDetailPage = () => {
                       <span>Health</span>
                     </div>
                     <span className="font-medium">
-                      {champion.stats.hp} (+{champion.stats.hpperlevel} per level)
+                      {champion.stats?.hp} (+{champion.stats?.hpperlevel} per level)
                     </span>
                   </div>
                   <div className="flex justify-between items-center">
@@ -270,7 +307,7 @@ const ChampionDetailPage = () => {
                       <span>Armor</span>
                     </div>
                     <span className="font-medium">
-                      {champion.stats.armor} (+{champion.stats.armorperlevel} per level)
+                      {champion.stats?.armor} (+{champion.stats?.armorperlevel} per level)
                     </span>
                   </div>
                   <div className="flex justify-between items-center">
@@ -279,7 +316,7 @@ const ChampionDetailPage = () => {
                       <span>Magic Resist</span>
                     </div>
                     <span className="font-medium">
-                      {champion.stats.spellblock} (+{champion.stats.spellblockperlevel} per level)
+                      {champion.stats?.spellblock} (+{champion.stats?.spellblockperlevel} per level)
                     </span>
                   </div>
                   <div className="flex justify-between items-center">
@@ -287,7 +324,7 @@ const ChampionDetailPage = () => {
                       <Zap className="h-5 w-5 mr-2 text-blue-500" />
                       <span>Movement Speed</span>
                     </div>
-                    <span className="font-medium">{champion.stats.movespeed}</span>
+                    <span className="font-medium">{champion.stats?.movespeed}</span>
                   </div>
                 </div>
               </div>
@@ -301,13 +338,13 @@ const ChampionDetailPage = () => {
                   <div className="flex justify-between items-center">
                     <span>Mana</span>
                     <span className="font-medium">
-                      {champion.stats.mp} (+{champion.stats.mpperlevel} per level)
+                      {champion.stats?.mp} (+{champion.stats?.mpperlevel} per level)
                     </span>
                   </div>
                   <div className="flex justify-between items-center">
                     <span>Mana Regen</span>
                     <span className="font-medium">
-                      {champion.stats.mpregen} (+{champion.stats.mpregenperlevel} per level)
+                      {champion.stats?.mpregen} (+{champion.stats?.mpregenperlevel} per level)
                     </span>
                   </div>
                 </div>
@@ -315,12 +352,12 @@ const ChampionDetailPage = () => {
                   <div className="flex justify-between items-center">
                     <span>Health Regen</span>
                     <span className="font-medium">
-                      {champion.stats.hpregen} (+{champion.stats.hpregenperlevel} per level)
+                      {champion.stats?.hpregen} (+{champion.stats?.hpregenperlevel} per level)
                     </span>
                   </div>
                   <div className="flex justify-between items-center">
                     <span>Crit Chance</span>
-                    <span className="font-medium">{champion.stats.crit}%</span>
+                    <span className="font-medium">{champion.stats?.crit}%</span>
                   </div>
                 </div>
               </div>

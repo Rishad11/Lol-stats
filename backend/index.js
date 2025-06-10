@@ -8,12 +8,12 @@ const { rateLimiter } = require("./middleware/rateLimiter")
 const { errorHandler } = require("./middleware/errorHandler")
 
 // Import routes (match current filenames)
-const championsRoutes = require("./routes/championsRoutes")
 const summonerRoutes = require("./routes/summonerRoutes")
 const leaderboardsRoutes = require("./routes/leaderboardsRoutes")
 const regionsRoutes = require("./routes/regionsRoutes")
 const searchRoutes = require("./routes/searchRoutes")
 const accountRoutes = require("./routes/accountRoutes")
+const ddragonRoutes = require("./routes/ddragonRoutes")
 
 // Initialize express app
 const app = express()
@@ -30,12 +30,12 @@ app.use(
 app.use(rateLimiter)
 
 // Routes
-app.use("/api/champions", championsRoutes)
 app.use("/api/summoner", summonerRoutes)
 app.use("/api/leaderboards", leaderboardsRoutes)
 app.use("/api/regions", regionsRoutes)
 app.use("/api/search", searchRoutes)
 app.use("/api/account", accountRoutes)
+app.use("/api/ddragon", ddragonRoutes)
 
 // Health check endpoint
 app.get("/health", (req, res) => {

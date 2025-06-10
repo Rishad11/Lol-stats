@@ -1,16 +1,16 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { useNavigate } from "react-router-dom"
 import axios from "axios"
 import UnifiedSearchBar from "../components/UnifiedSearchBar"
-import logo from "../assets/logo.png";
+import { useDataDragon } from "../hooks/UseDataDragon"
+import logo from "../assets/logo.png"
 
 const HomePage = () => {
   const [popularChampions, setPopularChampions] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
-  const navigate = useNavigate()
+  const { getChampionImageUrl, loading: ddLoading } = useDataDragon()
 
   useEffect(() => {
     const fetchData = async () => {
@@ -19,11 +19,16 @@ const HomePage = () => {
         setError(null)
 
         // Fetch popular champions
-        const championsResponse = await axios.get("/api/champions")
-        // Sort by pick rate and take top 5
-        const sortedChampions = [...championsResponse.data]
-          .sort((a, b) => Number.parseFloat(b.pickRate) - Number.parseFloat(a.pickRate))
+        const championsResponse = await axios.get("/api/ddragon/champions")
+        // championsResponse.data.data is an object with championId as keys
+        const sortedChampions = Object.values(championsResponse.data.data)
+          .sort((a, b) => Number.parseFloat(b.pickRate || 0) - Number.parseFloat(a.pickRate || 0))
           .slice(0, 5)
+          .map((champion) => ({
+            id: champion.id,
+            name: champion.name,
+            // We'll use the getChampionImageUrl function in the render instead of storing URLs here
+          }))
 
         setPopularChampions(sortedChampions)
       } catch (error) {
@@ -32,11 +37,11 @@ const HomePage = () => {
 
         // Set fallback data
         setPopularChampions([
-          { id: "Yasuo", name: "Yasuo", image: "/placeholder.svg?height=80&width=80&text=Y" },
-          { id: "Jinx", name: "Jinx", image: "/placeholder.svg?height=80&width=80&text=J" },
-          { id: "Lux", name: "Lux", image: "/placeholder.svg?height=80&width=80&text=L" },
-          { id: "Zed", name: "Zed", image: "/placeholder.svg?height=80&width=80&text=Z" },
-          { id: "Ahri", name: "Ahri", image: "/placeholder.svg?height=80&width=80&text=A" },
+          { id: "Yasuo", name: "Yasuo" },
+          { id: "Jinx", name: "Jinx" },
+          { id: "Lux", name: "Lux" },
+          { id: "Zed", name: "Zed" },
+          { id: "Ahri", name: "Ahri" },
         ])
       } finally {
         setLoading(false)
@@ -51,7 +56,7 @@ const HomePage = () => {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
         <div className="text-center">
           <div className="flex justify-center mb-6">
-            <img src={logo} alt="LoL Stats Logo" className="h-24 w-auto" />
+            <img src={logo || "/placeholder.svg"} alt="LoL Stats Logo" className="h-24 w-auto" />
           </div>
           <h1 className="text-4xl font-extrabold text-white sm:text-5xl md:text-6xl">LoL Stats Tracker</h1>
           <p className="mt-3 max-w-md mx-auto text-base text-blue-100 sm:text-lg md:mt-5 md:text-xl">
@@ -71,7 +76,7 @@ const HomePage = () => {
           <div className="mt-16">
             <h2 className="text-2xl font-bold text-white mb-6">Popular Champions</h2>
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-4 max-w-3xl mx-auto">
-              {loading
+              {loading || ddLoading
                 ? // Loading skeleton
                   Array(5)
                     .fill(0)
@@ -89,7 +94,7 @@ const HomePage = () => {
                     >
                       <div className="aspect-square rounded-full bg-gray-200 mb-2 overflow-hidden">
                         <img
-                          src={champion.image || `/placeholder.svg?height=80&width=80&text=${champion.name.charAt(0)}`}
+                          src={getChampionImageUrl(champion.id) || "/placeholder.svg"}
                           alt={champion.name}
                           className="w-full h-full object-cover"
                           onError={(e) => {

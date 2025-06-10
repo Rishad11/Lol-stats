@@ -4,6 +4,7 @@ import { useState, useEffect } from "react"
 import { useParams, Link } from "react-router-dom"
 import { ArrowLeft, Trophy, Award, Star, Target, TrendingUp } from "lucide-react"
 import axios from "axios"
+import { useDataDragon } from "../hooks/UseDataDragon"
 import SummonerTabs from "../components/SummonerTabs"
 
 const SummonerChampionMastery = () => {
@@ -12,6 +13,8 @@ const SummonerChampionMastery = () => {
   const [championMastery, setChampionMastery] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
+
+  const { getChampionImageUrl, loading: ddLoading } = useDataDragon()
 
   useEffect(() => {
     const fetchData = async () => {
@@ -106,7 +109,7 @@ const SummonerChampionMastery = () => {
     return configs[level] || configs.default
   }
 
-  if (loading) {
+  if (loading || ddLoading) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
@@ -255,13 +258,9 @@ const SummonerChampionMastery = () => {
                     <div className="relative">
                       <div className="w-16 h-16 rounded-xl overflow-hidden bg-gradient-to-br from-slate-200 to-slate-300 shadow-lg">
                         <img
-                          src={`https://ddragon.leagueoflegends.com/cdn/14.1.1/img/champion/${champ.championName}.png`}
+                          src={getChampionImageUrl(champ.championName) || "/placeholder.svg"}
                           alt={champ.championName}
                           className="w-full h-full object-cover"
-                          onError={(e) => {
-                            e.target.onerror = null
-                            e.target.src = `/placeholder.svg?height=64&width=64&text=${champ.championName.charAt(0)}`
-                          }}
                         />
                       </div>
                       {index < 3 && (

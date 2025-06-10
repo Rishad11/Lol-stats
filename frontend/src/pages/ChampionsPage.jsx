@@ -2,7 +2,8 @@
 
 import { useState, useEffect } from "react"
 import { Link, useLocation } from "react-router-dom"
-import axios from "axios"
+import { fetchChampions } from "../services/apiCalls"
+import { useDataDragon } from "../hooks/UseDataDragon"
 import SearchBar from "../components/SearchBar"
 
 const ChampionsPage = () => {
@@ -14,6 +15,8 @@ const ChampionsPage = () => {
   const [tagFilter, setTagFilter] = useState("all")
   const location = useLocation()
 
+  const { version, getChampionImageUrl, loading: ddLoading } = useDataDragon()
+
   useEffect(() => {
     // Extract search query from URL if present
     const params = new URLSearchParams(location.search)
@@ -24,14 +27,21 @@ const ChampionsPage = () => {
   }, [location.search])
 
   useEffect(() => {
-    const fetchChampions = async () => {
+    const fetchChampionsData = async () => {
+      if (!version) return // Wait for version to be loaded
+
       try {
         setLoading(true)
         setError(null)
 
-        const response = await axios.get("/api/champions")
-        setChampions(response.data)
-        setFilteredChampions(response.data)
+        const response = await fetchChampions(version)
+        const championsData = Object.values(response.data).map((champion) => ({
+          ...champion,
+          image: getChampionImageUrl(champion.id),
+        }))
+
+        setChampions(championsData)
+        setFilteredChampions(championsData)
       } catch (error) {
         console.error("Error fetching champions:", error)
         setError("Failed to load champions. Please try again later.")
@@ -42,8 +52,10 @@ const ChampionsPage = () => {
       }
     }
 
-    fetchChampions()
-  }, [])
+    if (version && !ddLoading) {
+      fetchChampionsData()
+    }
+  }, [version, ddLoading])
 
   useEffect(() => {
     if (!champions || champions.length === 0) {
@@ -71,7 +83,7 @@ const ChampionsPage = () => {
 
   const tagOptions = [{ value: "all", label: "All Types" }, ...availableTags.map((tag) => ({ value: tag, label: tag }))]
 
-  if (loading) {
+  if (loading || ddLoading) {
     return (
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <h1 className="text-3xl font-bold mb-6">Champions</h1>
@@ -127,7 +139,7 @@ const ChampionsPage = () => {
             >
               <div className="w-16 h-16 mb-3 rounded-full overflow-hidden border-2 border-gray-200 group-hover:border-blue-400 transition-colors">
                 <img
-                  src={champion.image || `/placeholder.svg?height=64&width=64&text=${champion.name.charAt(0)}`}
+                  src={champion.image || "/placeholder.svg"}
                   alt={champion.name}
                   className="w-full h-full object-cover"
                 />

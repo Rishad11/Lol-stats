@@ -4,53 +4,8 @@ import { useState, useEffect } from "react"
 import { useParams, Link } from "react-router-dom"
 import { ArrowLeft, Shield, Sword, Award, Users } from "lucide-react"
 import axios from "axios"
+import { useDataDragon } from "../hooks/UseDataDragon"
 import SummonerTabs from "../components/SummonerTabs"
-
-// Bring back your ddragon maps
-const summonerSpells = {
-  21: "SummonerBarrier",
-  1: "SummonerBoost",
-  14: "SummonerDot",
-  3: "SummonerExhaust",
-  4: "SummonerFlash",
-  6: "SummonerHaste",
-  7: "SummonerHeal",
-  13: "SummonerMana",
-  30: "SummonerPoroRecall",
-  31: "SummonerPoroThrow",
-  11: "SummonerSmite",
-  39: "SummonerSnowURFSnowball_Mark",
-  32: "SummonerSnowball",
-  12: "SummonerTeleport",
-}
-
-const runeStyles = {
-  8000: "7201_Precision",
-  8100: "7200_Domination",
-  8200: "7202_Sorcery",
-  8300: "7203_Whimsy",
-  8400: "7204_Resolve",
-}
-
-const keystoneRunes = {
-  8005: "PressTheAttack",
-  8008: "LethalTempo",
-  8021: "FleetFootwork",
-  8010: "Conqueror",
-  8112: "Electrocute",
-  8124: "Predator",
-  8128: "DarkHarvest",
-  9923: "HailOfBlades",
-  8214: "SummonAery",
-  8229: "ArcaneComet",
-  8230: "PhaseRush",
-  8437: "GraspOfTheUndying",
-  8439: "VeteranAftershock",
-  8465: "Guardian",
-  8351: "GlacialAugment",
-  8360: "UnsealedSpellbook",
-  8369: "FirstStrike",
-}
 
 // Game mode mappings
 const gameTypeMap = {
@@ -81,6 +36,19 @@ const SummonerOverview = () => {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
   const [matchDetails, setMatchDetails] = useState({})
+
+  const {
+    getChampionImageUrl,
+    getItemImageUrl,
+    getSummonerSpellImageUrl,
+    getProfileIconUrl,
+    getKeystoneRuneImageUrl,
+    getRuneTreeImageUrl,
+    getRuneTreeColor,
+    getRuneTreeAbbr,
+    keystoneRunes,
+    loading: ddLoading,
+  } = useDataDragon()
 
   const toggleDetails = async (matchId) => {
     const current = matchDetails[matchId]
@@ -164,7 +132,7 @@ const SummonerOverview = () => {
     fetchSummonerData()
   }, [region, summonerName])
 
-  if (loading) {
+  if (loading || ddLoading) {
     return (
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <Link to="/" className="inline-flex items-center text-blue-500 hover:underline mb-6">
@@ -231,11 +199,10 @@ const SummonerOverview = () => {
             <div className="w-32 h-32 rounded-2xl bg-gradient-to-br from-blue-400 to-purple-600 p-1 shadow-lg">
               <div className="w-full h-full rounded-xl overflow-hidden bg-white">
                 <img
-                  src={`https://ddragon.leagueoflegends.com/cdn/15.11.1/img/profileicon/${summoner.profileIconId}.png`}
+                  src={getProfileIconUrl(summoner.profileIconId) || "/placeholder.svg"}
                   alt={summoner.searchedName}
                   className="w-full h-full object-cover"
                   onError={(e) => {
-                    e.target.onerror = null
                     e.target.src = `/placeholder.svg?height=128&width=128&text=${summoner.searchedName.charAt(0)}`
                   }}
                 />
@@ -297,415 +264,322 @@ const SummonerOverview = () => {
             <p className="text-gray-500">No recent matches found for this summoner.</p>
           </div>
         ) : (
-          matches.map((match) => {
-            // Temporary debugging - remove this after fixing
-            console.log("Match object keys:", Object.keys(match))
-            console.log("Match queue info:", {
-              queueId: match.queueId,
-              queue: match.queue,
-              gameMode: match.gameMode,
-              gameType: match.gameType,
-            })
-            console.log("Match items:", { item0: match.item0, item1: match.item1, items: match.items })
-
-            return (
-              <div
-                key={match.id}
-                className={`bg-white rounded-lg shadow-md overflow-hidden border-l-4 ${
-                  match.win ? "border-blue-500" : "border-red-500"
-                }`}
-              >
-                <div className="p-4">
-                  <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
-                    <div className="flex-shrink-0">
-                      <div className="w-16 h-16 rounded-full bg-gray-200 overflow-hidden">
-                        <img
-                          src={`https://ddragon.leagueoflegends.com/cdn/15.11.1/img/champion/${match.champion}.png`}
-                          alt={match.champion}
-                          className="w-full h-full object-cover"
-                          onError={(e) => {
-                            e.target.onerror = null
-                            e.target.src = `/placeholder.svg?height=64&width=64&text=${match.champion.charAt(0)}`
-                          }}
-                        />
-                      </div>
-                    </div>
-
-                    <div className="flex-1">
-                      <div className="flex flex-wrap justify-between gap-2">
-                        <div>
-                          <h3 className="font-bold">{match.champion}</h3>
-                          <p className={`text-sm ${match.win ? "text-blue-500" : "text-red-500"}`}>
-                            {match.win ? "Victory" : "Defeat"} • {match.role}
-                          </p>
-                          <p className="text-sm text-gray-500">
-                            {new Date(match.gameCreation).toLocaleDateString()} • {Math.floor(match.gameDuration / 60)}:
-                            {(match.gameDuration % 60).toString().padStart(2, "0")} •{" "}
-                            {gameTypeMap[match.queueId] || gameTypeMap[match.queue] || match.gameMode || "Unknown"}
-                          </p>
-                        </div>
-
-                        <div className="flex flex-col items-end">
-                          <div className="text-lg font-bold">
-                            {match.kills} / <span className="text-red-500">{match.deaths}</span> / {match.assists}
-                          </div>
-                          <div className="text-sm text-gray-500">
-                            {((match.kills + match.assists) / Math.max(1, match.deaths)).toFixed(2)} KDA
-                          </div>
-                        </div>
-                      </div>
-
-                      {/* Items Row */}
-                      <div className="mt-3 flex items-center gap-2">
-                        <span className="text-sm text-gray-600 font-medium">Items:</span>
-                        <div className="flex gap-1">
-                          {/* Check if items exist in match object, otherwise show placeholders */}
-                          {match.items && match.items.length > 0
-                            ? match.items.slice(0, 7).map((id, i) =>
-                                id > 0 ? (
-                                  <img
-                                    key={i}
-                                    src={`https://ddragon.leagueoflegends.com/cdn/15.11.1/img/item/${id}.png`}
-                                    alt="Item"
-                                    className="w-8 h-8 rounded border border-gray-200"
-                                    onError={(e) => {
-                                      e.target.onerror = null
-                                      e.target.src = `/placeholder.svg?height=32&width=32&text=?`
-                                    }}
-                                  />
-                                ) : (
-                                  <div key={i} className="w-8 h-8 rounded border border-gray-200 bg-gray-100"></div>
-                                ),
-                              )
-                            : /* If no items array, try individual item properties */
-                              [
-                                match.item0,
-                                match.item1,
-                                match.item2,
-                                match.item3,
-                                match.item4,
-                                match.item5,
-                                match.item6,
-                              ].map((id, i) =>
-                                id && id > 0 ? (
-                                  <img
-                                    key={i}
-                                    src={`https://ddragon.leagueoflegends.com/cdn/15.11.1/img/item/${id}.png`}
-                                    alt="Item"
-                                    className="w-8 h-8 rounded border border-gray-200"
-                                    onError={(e) => {
-                                      e.target.onerror = null
-                                      e.target.src = `/placeholder.svg?height=32&width=32&text=?`
-                                    }}
-                                  />
-                                ) : (
-                                  <div key={i} className="w-8 h-8 rounded border border-gray-200 bg-gray-100"></div>
-                                ),
-                              )}
-                        </div>
-                      </div>
-
-                      <div className="mt-4 grid grid-cols-2 sm:grid-cols-4 gap-4">
-                        <div className="flex items-center">
-                          <Sword className="h-4 w-4 mr-2 text-gray-500" />
-                          <span className="text-sm">
-                            CS: {match.cs} ({(match.cs / (match.gameDuration / 60)).toFixed(1)})
-                          </span>
-                        </div>
-                        <div className="flex items-center">
-                          <Shield className="h-4 w-4 mr-2 text-gray-500" />
-                          <span className="text-sm">Vision: {match.visionScore || "N/A"}</span>
-                        </div>
-                        <div className="flex items-center">
-                          <Award className="h-4 w-4 mr-2 text-gray-500" />
-                          <span className="text-sm">{match.multikill || "No"} Multikill</span>
-                        </div>
-                        <div className="flex items-center">
-                          <Users className="h-4 w-4 mr-2 text-gray-500" />
-                          <span className="text-sm">
-                            {gameTypeMap[match.queueId] || gameTypeMap[match.queue] || match.gameMode || "Unknown"}
-                          </span>
-                        </div>
-                      </div>
+          matches.map((match) => (
+            <div
+              key={match.id}
+              className={`bg-white rounded-lg shadow-md overflow-hidden border-l-4 ${
+                match.win ? "border-blue-500" : "border-red-500"
+              }`}
+            >
+              <div className="p-4">
+                <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
+                  <div className="flex-shrink-0">
+                    <div className="w-16 h-16 rounded-full bg-gray-200 overflow-hidden">
+                      <img
+                        src={getChampionImageUrl(match.champion) || "/placeholder.svg"}
+                        alt={match.champion}
+                        className="w-full h-full object-cover"
+                        onError={(e) => {
+                          e.target.src = `/placeholder.svg?height=64&width=64&text=${match.champion.charAt(0)}`
+                        }}
+                      />
                     </div>
                   </div>
 
-                  {/* Toggle details button */}
-                  <button
-                    onClick={() => toggleDetails(match.id)}
-                    className="mt-2 px-3 py-1 bg-blue-500 text-white rounded hover:bg-blue-600 transition-colors"
-                  >
-                    {matchDetails[match.id]?.expanded ? "Hide Details" : "Show Details"}
-                  </button>
+                  <div className="flex-1">
+                    <div className="flex flex-wrap justify-between gap-2">
+                      <div>
+                        <h3 className="font-bold">{match.champion}</h3>
+                        <p className={`text-sm ${match.win ? "text-blue-500" : "text-red-500"}`}>
+                          {match.win ? "Victory" : "Defeat"} • {match.role}
+                        </p>
+                        <p className="text-sm text-gray-500">
+                          {new Date(match.gameCreation).toLocaleDateString()} • {Math.floor(match.gameDuration / 60)}:
+                          {(match.gameDuration % 60).toString().padStart(2, "0")} •{" "}
+                          {gameTypeMap[match.queueId] || gameTypeMap[match.queue] || match.gameMode || "Unknown"}
+                        </p>
+                      </div>
 
-                  {/* Render additional match details if toggled */}
-                  {matchDetails[match.id]?.expanded && matchDetails[match.id]?.data && (
-                    <div className="p-4 bg-gray-50 mt-4 rounded">
-                      <h4 className="text-lg font-bold mb-4">Match Details</h4>
-
-                      {/* Team Split Details Block */}
-                      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-                        {[100, 200].map((teamId) => (
-                          <div key={teamId} className="space-y-3">
-                            <h5
-                              className={`font-semibold text-lg ${teamId === 100 ? "text-blue-600" : "text-red-600"}`}
-                            >
-                              {teamId === 100 ? "Blue Team" : "Red Team"}
-                            </h5>
-                            {matchDetails[match.id].data.info.participants
-                              .filter((p) => p.teamId === teamId)
-                              .map((participant) => (
-                                <div
-                                  key={participant.puuid}
-                                  className="flex items-center space-x-3 p-3 bg-white rounded-lg border"
-                                >
-                                  {/* Champion Image */}
-                                  <div className="flex-shrink-0">
-                                    <img
-                                      src={`https://ddragon.leagueoflegends.com/cdn/15.11.1/img/champion/${participant.championName}.png`}
-                                      alt={participant.championName}
-                                      className="w-8 h-8 rounded"
-                                      onError={(e) => {
-                                        e.target.onerror = null
-                                        e.target.src = `/placeholder.svg?height=32&width=32&text=${participant.championName.charAt(0)}`
-                                      }}
-                                    />
-                                  </div>
-
-                                  {/* Summoner Name */}
-                                  <div className="min-w-0 flex-1">
-                                    <span className="text-sm font-medium truncate block">
-                                      {participant.riotIdGameName || participant.summonerName || "Unknown"}
-                                    </span>
-                                  </div>
-
-                                  {/* Summoner Spells */}
-                                  <div className="flex space-x-1">
-                                    {[participant.summoner1Id, participant.summoner2Id].map((spellId, i) => {
-                                      const spellName = summonerSpells[spellId]
-                                      return spellName ? (
-                                        <img
-                                          key={i}
-                                          src={`https://ddragon.leagueoflegends.com/cdn/15.11.1/img/spell/${spellName}.png`}
-                                          alt={`Summoner Spell ${spellId}`}
-                                          className="w-5 h-5 rounded"
-                                          onError={(e) => {
-                                            e.target.style.display = "none"
-                                          }}
-                                        />
-                                      ) : (
-                                        <div key={i} className="w-5 h-5 bg-gray-200 rounded"></div>
-                                      )
-                                    })}
-                                  </div>
-
-                                  {/* Debug info - remove this after fixing */}
-                                  {(() => {
-                                    const primaryStyle = participant.perks?.styles?.[0]
-                                    const keystoneId = primaryStyle?.selections?.[0]?.perk
-                                    const secondaryStyle = participant.perks?.styles?.[1]
-                                    const secondaryId = secondaryStyle?.style
-
-                                    console.log(
-                                      `Player ${participant.riotIdGameName || participant.summonerName}: Keystone ${keystoneId}, Secondary ${secondaryId}`,
-                                    )
-
-                                    return null // Don't render anything, just for debugging
-                                  })()}
-
-                                  {/* Primary and Secondary Runes */}
-                                  <div className="flex space-x-1">
-                                    {participant.perks?.styles?.length >= 1 && (
-                                      <>
-                                        {/* Primary Keystone Rune */}
-                                        {(() => {
-                                          const primaryStyle = participant.perks.styles[0]
-                                          if (primaryStyle?.selections?.[0]) {
-                                            const keystoneId = primaryStyle.selections[0].perk
-                                            const keystoneName = keystoneRunes[keystoneId]
-
-                                            return (
-                                              <div
-                                                className="w-5 h-5 rounded bg-gray-200 overflow-hidden"
-                                                title={`Keystone: ${keystoneName || keystoneId}`}
-                                              >
-                                                <img
-                                                  src={`https://ddragon.leagueoflegends.com/cdn/img/perk-images/Styles/Precision/${keystoneName}/${keystoneName}.png`}
-                                                  alt={keystoneName || "Keystone"}
-                                                  className="w-full h-full object-cover"
-                                                  onError={(e) => {
-                                                    // Try different tree paths based on keystone ID
-                                                    const getKeystoneTree = (id) => {
-                                                      if ([8005, 8008, 8021, 8010].includes(id)) return "Precision"
-                                                      if ([8112, 8124, 8128, 9923].includes(id)) return "Domination"
-                                                      if ([8214, 8229, 8230].includes(id)) return "Sorcery"
-                                                      if ([8351, 8360, 8369].includes(id)) return "Inspiration"
-                                                      if ([8437, 8439, 8465].includes(id)) return "Resolve"
-                                                      return "Precision" // default
-                                                    }
-
-                                                    const tree = getKeystoneTree(keystoneId)
-                                                    const altUrl = `https://ddragon.leagueoflegends.com/cdn/img/perk-images/Styles/${tree}/${keystoneName}/${keystoneName}.png`
-
-                                                    if (e.target.src !== altUrl && keystoneName) {
-                                                      e.target.src = altUrl
-                                                    } else {
-                                                      // Final fallback - try direct keystone ID
-                                                      const directUrl = `https://ddragon.leagueoflegends.com/cdn/img/perk-images/Styles/RunesReforged/Keystone/${keystoneId}.png`
-                                                      if (e.target.src !== directUrl) {
-                                                        e.target.src = directUrl
-                                                      } else {
-                                                        // Show colored fallback
-                                                        e.target.style.display = "none"
-                                                        const getRuneColor = (styleId) => {
-                                                          switch (styleId) {
-                                                            case 8000:
-                                                              return "bg-yellow-500" // Precision
-                                                            case 8100:
-                                                              return "bg-red-500" // Domination
-                                                            case 8200:
-                                                              return "bg-blue-500" // Sorcery
-                                                            case 8300:
-                                                              return "bg-teal-500" // Inspiration
-                                                            case 8400:
-                                                              return "bg-green-500" // Resolve
-                                                            default:
-                                                              return "bg-gray-500"
-                                                          }
-                                                        }
-                                                        e.target.parentNode.className = `w-5 h-5 rounded flex items-center justify-center ${getRuneColor(primaryStyle.style)}`
-                                                        e.target.parentNode.innerHTML = `<span class="text-xs font-bold text-white" style="font-size: 7px;" title="Keystone ${keystoneId}">${keystoneName ? keystoneName.slice(0, 2).toUpperCase() : keystoneId.toString().slice(-2)}</span>`
-                                                      }
-                                                    }
-                                                  }}
-                                                />
-                                              </div>
-                                            )
-                                          }
-                                          return (
-                                            <div className="w-5 h-5 bg-gray-200 rounded" title="No primary rune"></div>
-                                          )
-                                        })()}
-
-                                        {/* Secondary Rune Tree */}
-                                        {participant.perks.styles.length >= 2 &&
-                                          (() => {
-                                            const secondaryStyle = participant.perks.styles[1]
-                                            const styleId = secondaryStyle?.style
-                                            const styleIcon = runeStyles[styleId]
-
-                                            return (
-                                              <div
-                                                className="w-5 h-5 rounded bg-gray-200 overflow-hidden"
-                                                title={`Secondary Tree: ${styleId}`}
-                                              >
-                                                <img
-                                                  src={`https://ddragon.leagueoflegends.com/cdn/img/perk-images/Styles/${styleIcon}.png`}
-                                                  alt="Secondary Rune Tree"
-                                                  className="w-full h-full object-cover"
-                                                  onError={(e) => {
-                                                    e.target.style.display = "none"
-                                                    const getTreeColor = (id) => {
-                                                      switch (id) {
-                                                        case 8000:
-                                                          return "bg-yellow-500" // Precision
-                                                        case 8100:
-                                                          return "bg-red-500" // Domination
-                                                        case 8200:
-                                                          return "bg-blue-500" // Sorcery
-                                                        case 8300:
-                                                          return "bg-teal-500" // Inspiration
-                                                        case 8400:
-                                                          return "bg-green-500" // Resolve
-                                                        default:
-                                                          return "bg-gray-500"
-                                                      }
-                                                    }
-                                                    const getTreeName = (id) => {
-                                                      switch (id) {
-                                                        case 8000:
-                                                          return "PR" // Precision
-                                                        case 8100:
-                                                          return "DO" // Domination
-                                                        case 8200:
-                                                          return "SO" // Sorcery
-                                                        case 8300:
-                                                          return "IN" // Inspiration
-                                                        case 8400:
-                                                          return "RE" // Resolve
-                                                        default:
-                                                          return "??"
-                                                      }
-                                                    }
-                                                    e.target.parentNode.className = `w-5 h-5 rounded flex items-center justify-center ${getTreeColor(styleId)}`
-                                                    e.target.parentNode.innerHTML = `<span class="text-xs font-bold text-white" style="font-size: 7px;" title="Tree ${styleId}">${getTreeName(styleId)}</span>`
-                                                  }}
-                                                />
-                                              </div>
-                                            )
-                                          })()}
-                                      </>
-                                    )}
-                                  </div>
-
-                                  {/* KDA */}
-                                  <div className="text-xs text-center min-w-[60px]">
-                                    <div className="font-medium">
-                                      {participant.kills}/{participant.deaths}/{participant.assists}
-                                    </div>
-                                    <div className="text-gray-500">
-                                      {(
-                                        (participant.kills + participant.assists) /
-                                        Math.max(1, participant.deaths)
-                                      ).toFixed(1)}{" "}
-                                      KDA
-                                    </div>
-                                  </div>
-
-                                  {/* CS and Vision Score */}
-                                  <div className="text-xs text-center min-w-[50px]">
-                                    <div className="font-medium">
-                                      {participant.totalMinionsKilled + participant.neutralMinionsKilled} CS
-                                    </div>
-                                    <div className="text-gray-500">VS: {participant.visionScore}</div>
-                                  </div>
-
-                                  {/* Items */}
-                                  <div className="flex space-x-1">
-                                    {[
-                                      participant.item0,
-                                      participant.item1,
-                                      participant.item2,
-                                      participant.item3,
-                                      participant.item4,
-                                      participant.item5,
-                                      participant.item6,
-                                    ]
-                                      .filter((id) => id > 0)
-                                      .slice(0, 6)
-                                      .map((id, i) => (
-                                        <img
-                                          key={i}
-                                          src={`https://ddragon.leagueoflegends.com/cdn/15.11.1/img/item/${id}.png`}
-                                          alt="Item"
-                                          className="w-5 h-5 rounded"
-                                          onError={(e) => {
-                                            e.target.style.display = "none"
-                                          }}
-                                        />
-                                      ))}
-                                  </div>
-                                </div>
-                              ))}
-                          </div>
-                        ))}
+                      <div className="flex flex-col items-end">
+                        <div className="text-lg font-bold">
+                          {match.kills} / <span className="text-red-500">{match.deaths}</span> / {match.assists}
+                        </div>
+                        <div className="text-sm text-gray-500">
+                          {((match.kills + match.assists) / Math.max(1, match.deaths)).toFixed(2)} KDA
+                        </div>
                       </div>
                     </div>
-                  )}
+
+                    {/* Items Row */}
+                    <div className="mt-3 flex items-center gap-2">
+                      <span className="text-sm text-gray-600 font-medium">Items:</span>
+                      <div className="flex gap-1">
+                        {/* Check if items exist in match object, otherwise show placeholders */}
+                        {match.items && match.items.length > 0
+                          ? match.items.slice(0, 7).map((id, i) =>
+                              id > 0 ? (
+                                <img
+                                  key={i}
+                                  src={getItemImageUrl(id) || "/placeholder.svg"}
+                                  alt="Item"
+                                  className="w-8 h-8 rounded border border-gray-200"
+                                  onError={(e) => {
+                                    e.target.src = `/placeholder.svg?height=32&width=32&text=?`
+                                  }}
+                                />
+                              ) : (
+                                <div key={i} className="w-8 h-8 rounded border border-gray-200 bg-gray-100"></div>
+                              ),
+                            )
+                          : /* If no items array, try individual item properties */
+                            [
+                              match.item0,
+                              match.item1,
+                              match.item2,
+                              match.item3,
+                              match.item4,
+                              match.item5,
+                              match.item6,
+                            ].map((id, i) =>
+                              id && id > 0 ? (
+                                <img
+                                  key={i}
+                                  src={getItemImageUrl(id) || "/placeholder.svg"}
+                                  alt="Item"
+                                  className="w-8 h-8 rounded border border-gray-200"
+                                  onError={(e) => {
+                                    e.target.src = `/placeholder.svg?height=32&width=32&text=?`
+                                  }}
+                                />
+                              ) : (
+                                <div key={i} className="w-8 h-8 rounded border border-gray-200 bg-gray-100"></div>
+                              ),
+                            )}
+                      </div>
+                    </div>
+
+                    <div className="mt-4 grid grid-cols-2 sm:grid-cols-4 gap-4">
+                      <div className="flex items-center">
+                        <Sword className="h-4 w-4 mr-2 text-gray-500" />
+                        <span className="text-sm">
+                          CS: {match.cs} ({(match.cs / (match.gameDuration / 60)).toFixed(1)})
+                        </span>
+                      </div>
+                      <div className="flex items-center">
+                        <Shield className="h-4 w-4 mr-2 text-gray-500" />
+                        <span className="text-sm">Vision: {match.visionScore || "N/A"}</span>
+                      </div>
+                      <div className="flex items-center">
+                        <Award className="h-4 w-4 mr-2 text-gray-500" />
+                        <span className="text-sm">{match.multikill || "No"} Multikill</span>
+                      </div>
+                      <div className="flex items-center">
+                        <Users className="h-4 w-4 mr-2 text-gray-500" />
+                        <span className="text-sm">
+                          {gameTypeMap[match.queueId] || gameTypeMap[match.queue] || match.gameMode || "Unknown"}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
                 </div>
+
+                {/* Toggle details button */}
+                <button
+                  onClick={() => toggleDetails(match.id)}
+                  className="mt-2 px-3 py-1 bg-blue-500 text-white rounded hover:bg-blue-600 transition-colors"
+                >
+                  {matchDetails[match.id]?.expanded ? "Hide Details" : "Show Details"}
+                </button>
+
+                {/* Render additional match details if toggled */}
+                {matchDetails[match.id]?.expanded && matchDetails[match.id]?.data && (
+                  <div className="p-4 bg-gray-50 mt-4 rounded">
+                    <h4 className="text-lg font-bold mb-4">Match Details</h4>
+
+                    {/* Team Split Details Block */}
+                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                      {[100, 200].map((teamId) => (
+                        <div key={teamId} className="space-y-3">
+                          <h5 className={`font-semibold text-lg ${teamId === 100 ? "text-blue-600" : "text-red-600"}`}>
+                            {teamId === 100 ? "Blue Team" : "Red Team"}
+                          </h5>
+                          {matchDetails[match.id].data.info.participants
+                            .filter((p) => p.teamId === teamId)
+                            .map((participant) => (
+                              <div
+                                key={participant.puuid}
+                                className="flex items-center space-x-3 p-3 bg-white rounded-lg border"
+                              >
+                                {/* Champion Image */}
+                                <div className="flex-shrink-0">
+                                  <img
+                                    src={getChampionImageUrl(participant.championName) || "/placeholder.svg"}
+                                    alt={participant.championName}
+                                    className="w-8 h-8 rounded"
+                                    onError={(e) => {
+                                      e.target.src = `/placeholder.svg?height=32&width=32&text=${participant.championName.charAt(0)}`
+                                    }}
+                                  />
+                                </div>
+
+                                {/* Summoner Name */}
+                                <div className="min-w-0 flex-1">
+                                  <span className="text-sm font-medium truncate block">
+                                    {participant.riotIdGameName || participant.summonerName || "Unknown"}
+                                  </span>
+                                </div>
+
+                                {/* Summoner Spells */}
+                                <div className="flex space-x-1">
+                                  {[participant.summoner1Id, participant.summoner2Id].map((spellId, i) => (
+                                    <img
+                                      key={i}
+                                      src={getSummonerSpellImageUrl(spellId) || "/placeholder.svg"}
+                                      alt={`Summoner Spell ${spellId}`}
+                                      className="w-5 h-5 rounded"
+                                      onError={(e) => {
+                                        e.target.src = `/placeholder.svg?height=20&width=20&text=${spellId}`
+                                      }}
+                                    />
+                                  ))}
+                                </div>
+
+                                {/* Primary and Secondary Runes */}
+                                <div className="flex space-x-1">
+                                  {participant.perks?.styles?.length >= 1 && (
+                                    <>
+                                      {/* Primary Keystone Rune */}
+                                      {(() => {
+                                        const primaryStyle = participant.perks.styles[0]
+                                        if (primaryStyle?.selections?.[0]) {
+                                          const keystoneId = primaryStyle.selections[0].perk
+                                          const keystoneName = keystoneRunes[keystoneId]?.name
+
+                                          return (
+                                            <div
+                                              className="w-5 h-5 rounded bg-gray-200 overflow-hidden flex items-center justify-center"
+                                              title={`Keystone: ${keystoneName || keystoneId}`}
+                                            >
+                                              <img
+                                                src={getKeystoneRuneImageUrl(keystoneId) || "/placeholder.svg"}
+                                                alt={keystoneName || "Keystone"}
+                                                className="w-full h-full object-cover"
+                                                onError={(e) => {
+                                                  // Show colored fallback with abbreviation
+                                                  e.target.style.display = "none"
+                                                  const getRuneColor = (styleId) => {
+                                                    switch (styleId) {
+                                                      case 8000:
+                                                        return "bg-yellow-500" // Precision
+                                                      case 8100:
+                                                        return "bg-red-500" // Domination
+                                                      case 8200:
+                                                        return "bg-blue-500" // Sorcery
+                                                      case 8300:
+                                                        return "bg-teal-500" // Inspiration
+                                                      case 8400:
+                                                        return "bg-green-500" // Resolve
+                                                      default:
+                                                        return "bg-gray-500"
+                                                    }
+                                                  }
+                                                  e.target.parentNode.className = `w-5 h-5 rounded flex items-center justify-center ${getRuneColor(primaryStyle.style)}`
+                                                  e.target.parentNode.innerHTML = `<span class="text-xs font-bold text-white" style="font-size: 7px;" title="Keystone ${keystoneId}">${keystoneName ? keystoneName.slice(0, 2).toUpperCase() : keystoneId.toString().slice(-2)}</span>`
+                                                }}
+                                              />
+                                            </div>
+                                          )
+                                        }
+                                        return (
+                                          <div className="w-5 h-5 bg-gray-200 rounded" title="No primary rune"></div>
+                                        )
+                                      })()}
+
+                                      {/* Secondary Rune Tree */}
+                                      {participant.perks.styles.length >= 2 &&
+                                        (() => {
+                                          const secondaryStyle = participant.perks.styles[1]
+                                          const styleId = secondaryStyle?.style
+
+                                          return (
+                                            <div
+                                              className="w-5 h-5 rounded bg-gray-200 overflow-hidden flex items-center justify-center"
+                                              title={`Secondary Tree: ${styleId}`}
+                                            >
+                                              <img
+                                                src={getRuneTreeImageUrl(styleId) || "/placeholder.svg"}
+                                                alt="Secondary Rune Tree"
+                                                className="w-full h-full object-cover"
+                                                onError={(e) => {
+                                                  e.target.style.display = "none"
+                                                  e.target.parentNode.className = `w-5 h-5 rounded flex items-center justify-center ${getRuneTreeColor(styleId)}`
+                                                  e.target.parentNode.innerHTML = `<span class="text-xs font-bold text-white" style="font-size: 7px;" title="Tree ${styleId}">${getRuneTreeAbbr(styleId)}</span>`
+                                                }}
+                                              />
+                                            </div>
+                                          )
+                                        })()}
+                                    </>
+                                  )}
+                                </div>
+
+                                {/* KDA */}
+                                <div className="text-xs text-center min-w-[60px]">
+                                  <div className="font-medium">
+                                    {participant.kills}/{participant.deaths}/{participant.assists}
+                                  </div>
+                                  <div className="text-gray-500">
+                                    {(
+                                      (participant.kills + participant.assists) /
+                                      Math.max(1, participant.deaths)
+                                    ).toFixed(1)}{" "}
+                                    KDA
+                                  </div>
+                                </div>
+
+                                {/* CS and Vision Score */}
+                                <div className="text-xs text-center min-w-[50px]">
+                                  <div className="font-medium">
+                                    {participant.totalMinionsKilled + participant.neutralMinionsKilled} CS
+                                  </div>
+                                  <div className="text-gray-500">VS: {participant.visionScore}</div>
+                                </div>
+
+                                {/* Items */}
+                                <div className="flex space-x-1">
+                                  {[
+                                    participant.item0,
+                                    participant.item1,
+                                    participant.item2,
+                                    participant.item3,
+                                    participant.item4,
+                                    participant.item5,
+                                    participant.item6,
+                                  ]
+                                    .filter((id) => id > 0)
+                                    .slice(0, 6)
+                                    .map((id, i) => (
+                                      <img
+                                        key={i}
+                                        src={getItemImageUrl(id) || "/placeholder.svg"}
+                                        alt="Item"
+                                        className="w-5 h-5 rounded"
+                                        onError={(e) => {
+                                          e.target.src = `/placeholder.svg?height=20&width=20&text=?`
+                                        }}
+                                      />
+                                    ))}
+                                </div>
+                              </div>
+                            ))}
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
               </div>
-            )
-          })
+            </div>
+          ))
         )}
       </div>
     </div>
