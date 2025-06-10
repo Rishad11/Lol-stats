@@ -4,7 +4,7 @@ import { useState, useEffect } from "react"
 import { useParams, Link } from "react-router-dom"
 import { ArrowLeft, Trophy, Award, Star, Target, TrendingUp } from "lucide-react"
 import axios from "axios"
-import SummonerTabs from "../components/summonertabs"
+import SummonerTabs from "../components/SummonerTabs"
 
 const SummonerChampionMastery = () => {
   const { region, summonerName } = useParams()

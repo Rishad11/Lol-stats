@@ -1,15 +1,9 @@
-// /routes/leaderboardsRoutes.js
+const express = require('express');
+const { getTopPlayersByRegion } = require('../services/leaderboardsService');
 
-const express = require('express')
-const { getTopPlayersByRegion } = require('../services/leaderboardsService')
+const router = express.Router();
 
-const router = express.Router()
-
-/**
- * GET /api/leaderboards/:region
- * Fetch the top N players for the given region 
- */
-router.get('/:region', async (req, res, next) => {
+router.get('/:region', async (req, res) => {
   try {
     res.set("Cache-Control", "no-store");
     res.removeHeader("ETag");
@@ -18,8 +12,8 @@ router.get('/:region', async (req, res, next) => {
     const players = await getTopPlayersByRegion(region, limit);
     res.json(players);
   } catch (err) {
-    next(err);
+    res.status(500).json({ error: err.message || "Failed to fetch leaderboard" });
   }
-})
+});
 
-module.exports = router
+module.exports = router;

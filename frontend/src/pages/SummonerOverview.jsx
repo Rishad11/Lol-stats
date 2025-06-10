@@ -4,7 +4,7 @@ import { useState, useEffect } from "react"
 import { useParams, Link } from "react-router-dom"
 import { ArrowLeft, Shield, Sword, Award, Users } from "lucide-react"
 import axios from "axios"
-import SummonerTabs from "../components/summonertabs"
+import SummonerTabs from "../components/SummonerTabs"
 
 // Bring back your ddragon maps
 const summonerSpells = {

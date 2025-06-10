@@ -1,8 +1,13 @@
 // services/riotApi.js
 
 const axios = require("axios");
+const { regionToCluster } = require("../utils/regions");
+const { riotHeaders } = require("../utils/riotHelpers");
 
 function platformFor(region) {
+  const cluster = regionToCluster[region.toLowerCase()];
+  if (cluster) return cluster;
+  // fallback for unknown region
   if (/^(euw|eune|tr|ru)/.test(region)) return "europe";
   if (/^(na|br|lan|las)/.test(region)) return "americas";
   return "asia";
@@ -31,7 +36,7 @@ async function getMatchIdsByPUUID(
 
   const res = await axios.get(url, {
     params,
-    headers: { "X-Riot-Token": process.env.RIOT_API_KEY },
+    headers: riotHeaders(),
   });
   return res.data;
 }
@@ -40,7 +45,7 @@ async function getMatchDetails(region, matchId) {
   const platform = platformFor(region);
   const url = `https://${platform}.api.riotgames.com/lol/match/v5/matches/${matchId}`;
   const res = await axios.get(url, {
-    headers: { "X-Riot-Token": process.env.RIOT_API_KEY },
+    headers: riotHeaders(),
   });
   return res.data;
 }
@@ -52,7 +57,7 @@ async function getMatchDetails(region, matchId) {
  async function getChallengerLeague(platform) {
    const url = `https://${platform}.api.riotgames.com/lol/league/v4/challengerleagues/by-queue/RANKED_SOLO_5x5`;
    const res = await axios.get(url, {
-     headers: { "X-Riot-Token": process.env.RIOT_API_KEY },
+     headers: riotHeaders(),
    });
    return res.data;
  }
@@ -64,7 +69,7 @@ async function getMatchDetails(region, matchId) {
  */
 async function getSummonerById(platform, summonerId) {
   const url = `https://${platform}.api.riotgames.com/lol/summoner/v4/summoners/${summonerId}`;
-  const res = await axios.get(url, { headers: { "X-Riot-Token": process.env.RIOT_API_KEY } });
+  const res = await axios.get(url, { headers: riotHeaders() });
   return res.data; // { id, accountId, puuid, name, profileIconId, ... }
 }
 
@@ -80,7 +85,7 @@ async function getSummonerNameByPUUID(platform, puuid) {
   console.log("🔍 Fetching Summoner name:", { platform, puuid, url });
   try {
     const { data } = await axios.get(url, {
-      headers: { "X-Riot-Token": process.env.RIOT_API_KEY }
+      headers: riotHeaders()
     });
     console.log("✅  Summoner API response name:", data.name);
     return data.name;

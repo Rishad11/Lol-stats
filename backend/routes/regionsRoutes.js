@@ -95,3 +95,4 @@ router.get("/", (req, res) => {
 })
 
 module.exports = router
+// This file should be renamed to routes/regions.js

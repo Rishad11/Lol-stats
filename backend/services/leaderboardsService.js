@@ -1,17 +1,10 @@
 // services/leaderboardsService.js
 const axios = require("axios");
 const { fetchRiotIdByPUUID } = require("./summonerService");
-
-const regionPlatformMap = {
-  na:   "NA1",
-  euw:  "EUW1",
-  eune: "EUN1",
-  kr:   "KR",
-  jp:   "JP1",
-};
+const { regionToPlatform } = require("../utils/regions");
 
 async function getTopPlayersByRegion(region, limit = 10) {
-  const platform = regionPlatformMap[region.toLowerCase()];
+  const platform = regionToPlatform[region.toLowerCase()];
   if (!platform) throw new Error(`Unsupported region: ${region}`);
 
   const url = `https://${platform.toLowerCase()}.api.riotgames.com/lol/league/v4/challengerleagues/by-queue/RANKED_SOLO_5x5`;

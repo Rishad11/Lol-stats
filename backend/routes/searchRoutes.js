@@ -2,39 +2,8 @@ const express = require("express")
 const router = express.Router()
 const axios = require("axios")
 const cache = require("../utils/cache")
-
-// Environment variables
-const RIOT_API_KEY = process.env.RIOT_API_KEY
-
-// Base URLs for different Riot API endpoints
-const regionToHost = {
-  na1: "na1.api.riotgames.com",
-  euw1: "euw1.api.riotgames.com",
-  eun1: "eun1.api.riotgames.com",
-  kr: "kr.api.riotgames.com",
-  jp1: "jp1.api.riotgames.com",
-  br1: "br1.api.riotgames.com",
-  la1: "la1.api.riotgames.com",
-  la2: "la2.api.riotgames.com",
-  oc1: "oc1.api.riotgames.com",
-  ru: "ru.api.riotgames.com",
-  tr1: "tr1.api.riotgames.com",
-}
-
-// Map regions to routing values for account-v1 API
-const regionToCluster = {
-  na1: "americas",
-  euw1: "europe",
-  eun1: "europe",
-  kr: "asia",
-  jp1: "asia",
-  br1: "americas",
-  la1: "americas",
-  la2: "americas",
-  oc1: "sea",
-  ru: "europe",
-  tr1: "europe",
-}
+const { regionToHost, regionToCluster } = require("../utils/regions")
+const { riotHeaders } = require("../utils/riotHelpers")
 
 // Search for champions
 router.get("/champions", async (req, res) => {
@@ -121,7 +90,7 @@ router.get("/summoners/:region", async (req, res) => {
       try {
         const summonerResponse = await axios.get(
           `https://${regionToHost[region]}/lol/summoner/v4/summoners/by-name/${encodeURIComponent(query)}`,
-          { headers: { "X-Riot-Token": RIOT_API_KEY } },
+          { headers: riotHeaders() },
         )
 
         const summonerData = summonerResponse.data
@@ -156,7 +125,7 @@ router.get("/summoners/:region", async (req, res) => {
       try {
         const accountResponse = await axios.get(
           `https://${regionToCluster[region]}.api.riotgames.com/riot/account/v1/accounts/by-riot-id/${encodeURIComponent(gameName)}/${encodeURIComponent(tagLine)}`,
-          { headers: { "X-Riot-Token": RIOT_API_KEY } },
+          { headers: riotHeaders() },
         )
 
         const accountData = accountResponse.data
@@ -164,7 +133,7 @@ router.get("/summoners/:region", async (req, res) => {
         // Now we need to get the summoner data using the PUUID
         const summonerResponse = await axios.get(
           `https://${regionToHost[region]}/lol/summoner/v4/summoners/by-puuid/${accountData.puuid}`,
-          { headers: { "X-Riot-Token": RIOT_API_KEY } },
+          { headers: riotHeaders() },
         )
 
         const summonerData = summonerResponse.data
