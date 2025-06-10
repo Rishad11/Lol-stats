@@ -1,42 +1,16 @@
 "use client"
 
-import { useState, useEffect } from "react"
 import { useParams, Link } from "react-router-dom"
 import { ArrowLeft, Shield, Sword, Award, Users } from "lucide-react"
-import axios from "axios"
-import { useDataDragon } from "../hooks/UseDataDragon"
+import { useDataDragon } from "../hooks/useDataDragon"
+import { useSummoner } from "../hooks/useSummoner"
+import { useMatches } from "../hooks/useMatches"
+import { useMatchDetails } from "../hooks/useMatchDetails"
+import { gameTypeMap } from "../utils/gameHelpers"
 import SummonerTabs from "../components/SummonerTabs"
-
-// Game mode mappings
-const gameTypeMap = {
-  400: "Normal Draft",
-  420: "Ranked Solo/Duo",
-  430: "Normal Blind",
-  440: "Ranked Flex",
-  450: "ARAM",
-  700: "Clash",
-  830: "Co-op vs AI Intro",
-  840: "Co-op vs AI Beginner",
-  850: "Co-op vs AI Intermediate",
-  900: "URF",
-  1020: "One for All",
-  1300: "Nexus Blitz",
-  1400: "Ultimate Spellbook",
-  1700: "Arena",
-  1900: "Pick URF",
-  2000: "Tutorial",
-  2010: "Tutorial",
-  2020: "Tutorial",
-}
 
 const SummonerOverview = () => {
   const { region, summonerName } = useParams()
-  const [summoner, setSummoner] = useState(null)
-  const [matches, setMatches] = useState([])
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState(null)
-  const [matchDetails, setMatchDetails] = useState({})
-
   const {
     getChampionImageUrl,
     getItemImageUrl,
@@ -50,89 +24,23 @@ const SummonerOverview = () => {
     loading: ddLoading,
   } = useDataDragon()
 
+  const { summoner, loading: summonerLoading, error: summonerError } = useSummoner(region, summonerName)
+  const { matches, loading: matchesLoading, error: matchesError } = useMatches(region, summoner?.puuid)
+  const { matchDetails, fetchMatchDetails, toggleMatchDetails } = useMatchDetails()
+
+  const loading = summonerLoading || matchesLoading || ddLoading
+  const error = summonerError || matchesError
+
   const toggleDetails = async (matchId) => {
     const current = matchDetails[matchId]
     if (current && current.data) {
-      setMatchDetails((prev) => ({
-        ...prev,
-        [matchId]: { ...prev[matchId], expanded: !prev[matchId].expanded },
-      }))
+      toggleMatchDetails(matchId)
     } else {
-      try {
-        const res = await axios.get(`/api/summoner/${region}/match/${matchId}/details`)
-        setMatchDetails((prev) => ({
-          ...prev,
-          [matchId]: { data: res.data, expanded: true },
-        }))
-      } catch (err) {
-        console.error("Error fetching match details", err)
-      }
+      await fetchMatchDetails(region, matchId)
     }
   }
 
-  useEffect(() => {
-    const fetchSummonerData = async () => {
-      try {
-        setLoading(true)
-        setError(null)
-        let summonerData
-
-        if (summonerName.includes("#")) {
-          const [gameName, tagLine] = summonerName.split("#")
-          const accountResponse = await axios.get(
-            `/api/account/by-riot-id/${encodeURIComponent(gameName)}/${encodeURIComponent(tagLine)}`,
-          )
-          const { puuid } = accountResponse.data
-          const summonerResponse = await axios.get(`/api/summoner/by-puuid/${region}/${puuid}`)
-          summonerData = summonerResponse.data
-          // Store the original searched name for display
-          summonerData.searchedName = `${gameName}#${tagLine}`
-        } else {
-          const summonerResponse = await axios.get(`/api/summoner/${region}/${encodeURIComponent(summonerName)}`)
-          summonerData = summonerResponse.data
-          summonerData.searchedName = summonerName
-        }
-
-        const rankResponse = await axios.get(`/api/summoner/${region}/${summonerData.id}/rank`)
-        summonerData.rank = rankResponse.data?.[0] || null
-
-        if (summonerData.rank) {
-          summonerData.totalGames = summonerData.rank.wins + summonerData.rank.losses
-          summonerData.winRate = Math.round((summonerData.rank.wins / summonerData.totalGames) * 100)
-        }
-
-        setSummoner(summonerData)
-
-        try {
-          const matchesResponse = await axios.get(`/api/summoner/${region}/${summonerData.puuid}/matches`)
-          setMatches(matchesResponse.data)
-        } catch (matchError) {
-          console.error("Error fetching matches:", matchError)
-          setMatches([])
-        }
-      } catch (err) {
-        console.error("Error fetching summoner data:", err)
-        const errorMessage = err.response?.data?.error || err.message
-
-        if (err.response?.status === 404) {
-          setError(`Summoner "${summonerName}" not found in ${region.toUpperCase()} region.`)
-        } else if (err.response?.status === 403) {
-          setError(`API key invalid or expired. Please check your API key.`)
-        } else {
-          setError(`Failed to load summoner data: ${errorMessage}`)
-        }
-
-        setSummoner(null)
-        setMatches([])
-      } finally {
-        setLoading(false)
-      }
-    }
-
-    fetchSummonerData()
-  }, [region, summonerName])
-
-  if (loading || ddLoading) {
+  if (loading) {
     return (
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <Link to="/" className="inline-flex items-center text-blue-500 hover:underline mb-6">

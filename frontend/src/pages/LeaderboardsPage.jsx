@@ -1,56 +1,18 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState } from "react"
 import { Link } from "react-router-dom"
+import { useLeaderboards } from "../hooks/useLeaderboards"
+import { getRegionOptions, getPlatformCode } from "../utils/regionHelpers"
+import { calculateWinRate } from "../utils/gameHelpers"
 
 const LeaderboardsPage = () => {
-  const [players, setPlayers] = useState([])
-  const [loading, setLoading] = useState(true)
   const [region, setRegion] = useState("na")
+  const { players, loading, error } = useLeaderboards(region, 10)
 
-  // map region keys -> Riot platform codes and derive lowercase platform code for routing
-  const regionPlatformMap = {
-    na:   "NA1",
-    euw:  "EUW1",
-    eune: "EUN1",
-    kr:   "KR",
-    jp:   "JP1",
-  }
-  const platformCode = regionPlatformMap[region.toLowerCase()]?.toLowerCase()
-
-  useEffect(() => {
-    const fetchLeaderboards = async () => {
-      setLoading(true)
-      try {
-        const response = await fetch(`/api/leaderboards/${region}?limit=10`, {
-          cache: "no-cache",
-        })
-        console.log("HTTP status:", response.status, response.statusText)
-        const data = await response.json()
-        console.log("📥 Leaderboard payload in React:", data)
-        setPlayers(data)
-      } catch (error) {
-        console.error("Error fetching leaderboards:", error)
-      } finally {
-        setLoading(false)
-      }
-    }
-
-    fetchLeaderboards()
-  }, [region])
-
-  const regions = [
-    { value: "na", label: "North America" },
-    { value: "euw", label: "Europe West" },
-    { value: "eune", label: "Europe Nordic & East" },
-    { value: "kr", label: "Korea" },
-    { value: "jp", label: "Japan" },
-  ]
-
-  const calculateWinRate = (wins, losses) => {
-    const total = wins + losses
-    return total > 0 ? Math.round((wins / total) * 100) : 0
-  }
+  // Derive lowercase platform code for routing
+  const platformCode = getPlatformCode(region)
+  const regions = getRegionOptions()
 
   if (loading) {
     return (
@@ -86,22 +48,40 @@ const LeaderboardsPage = () => {
         <table className="min-w-full divide-y divide-gray-200">
           <thead className="bg-gray-50">
             <tr>
-              <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              <th
+                scope="col"
+                className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+              >
                 Rank
               </th>
-              <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              <th
+                scope="col"
+                className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+              >
                 Summoner
               </th>
-              <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              <th
+                scope="col"
+                className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+              >
                 Tier
               </th>
-              <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              <th
+                scope="col"
+                className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+              >
                 LP
               </th>
-              <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              <th
+                scope="col"
+                className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+              >
                 Win Rate
               </th>
-              <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              <th
+                scope="col"
+                className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+              >
                 W/L
               </th>
             </tr>

@@ -2,6 +2,7 @@ import axios from "axios"
 
 const API_URL = import.meta.env.VITE_API_URL || "http://localhost:5000/api"
 
+// Create a configured axios instance
 const api = axios.create({
   baseURL: API_URL,
   timeout: 10000,
@@ -36,46 +37,5 @@ api.interceptors.response.use(
     }
   },
 )
-
-// Region endpoints
-export const getRegions = () => {
-  return api.get("/regions")
-}
-
-// Search endpoints
-export const searchChampions = (query) => {
-  return api.get("/search/champions", { params: { query } })
-}
-
-export const searchSummoners = (region, query) => {
-  return api.get(`/search/summoners/${region}`, { params: { query } })
-}
-
-// Summoner endpoints
-export const getSummoner = (region, summonerName) => {
-  return api.get(`/summoner/${region}/${summonerName}`)
-}
-
-export const getMatches = (region, puuid, count = 10) => {
-  return api.get(`/summoner/${region}/${puuid}/matches`, { params: { count } })
-}
-
-// Champions endpoints
-export const getChampions = () => {
-  return api.get("/champions")
-}
-
-export const getChampionDetails = (championId) => {
-  return api.get(`/champions/${championId}`)
-}
-
-export const getChampionStats = (championId) => {
-  return api.get(`/champions/${championId}/stats`)
-}
-
-// Leaderboards endpoints
-export const getLeaderboards = (region) => {
-  return api.get(`/leaderboards/${region}`)
-}
 
 export default api

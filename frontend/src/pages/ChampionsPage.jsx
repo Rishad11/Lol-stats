@@ -1,21 +1,18 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useMemo } from "react"
 import { Link, useLocation } from "react-router-dom"
-import { fetchChampions } from "../services/apiCalls"
-import { useDataDragon } from "../hooks/UseDataDragon"
+import { useDataDragon } from "../hooks/useDataDragon"
+import { useChampions } from "../hooks/useChampions"
 import SearchBar from "../components/SearchBar"
 
 const ChampionsPage = () => {
-  const [champions, setChampions] = useState([])
-  const [filteredChampions, setFilteredChampions] = useState([])
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState(null)
   const [searchQuery, setSearchQuery] = useState("")
   const [tagFilter, setTagFilter] = useState("all")
   const location = useLocation()
 
   const { version, getChampionImageUrl, loading: ddLoading } = useDataDragon()
+  const { champions, loading, error } = useChampions(version)
 
   useEffect(() => {
     // Extract search query from URL if present
@@ -26,61 +23,27 @@ const ChampionsPage = () => {
     }
   }, [location.search])
 
-  useEffect(() => {
-    const fetchChampionsData = async () => {
-      if (!version) return // Wait for version to be loaded
-
-      try {
-        setLoading(true)
-        setError(null)
-
-        const response = await fetchChampions(version)
-        const championsData = Object.values(response.data).map((champion) => ({
-          ...champion,
-          image: getChampionImageUrl(champion.id),
-        }))
-
-        setChampions(championsData)
-        setFilteredChampions(championsData)
-      } catch (error) {
-        console.error("Error fetching champions:", error)
-        setError("Failed to load champions. Please try again later.")
-        setChampions([])
-        setFilteredChampions([])
-      } finally {
-        setLoading(false)
-      }
-    }
-
-    if (version && !ddLoading) {
-      fetchChampionsData()
-    }
-  }, [version, ddLoading])
-
-  useEffect(() => {
+  // Memoize filteredChampions to avoid infinite re-renders
+  const filteredChampions = useMemo(() => {
     if (!champions || champions.length === 0) {
-      setFilteredChampions([])
-      return
+      return []
     }
-
     let filtered = [...champions]
-
-    // Apply search filter
     if (searchQuery) {
       filtered = filtered.filter((champion) => champion.name.toLowerCase().includes(searchQuery.toLowerCase()))
     }
-
-    // Apply tag filter
     if (tagFilter !== "all") {
       filtered = filtered.filter((champion) => champion.tags && champion.tags.includes(tagFilter))
     }
-
-    setFilteredChampions(filtered)
-  }, [searchQuery, tagFilter, champions])
+    // Add image URLs to champions
+    return filtered.map((champion) => ({
+      ...champion,
+      image: getChampionImageUrl(champion.id),
+    }))
+  }, [searchQuery, tagFilter, champions, getChampionImageUrl])
 
   // Get unique tags from all champions for filter dropdown
   const availableTags = champions.length > 0 ? [...new Set(champions.flatMap((champion) => champion.tags || []))] : []
-
   const tagOptions = [{ value: "all", label: "All Types" }, ...availableTags.map((tag) => ({ value: tag, label: tag }))]
 
   if (loading || ddLoading) {

@@ -1,55 +1,12 @@
 "use client"
-
-import { useState, useEffect } from "react"
-import axios from "axios"
 import UnifiedSearchBar from "../components/UnifiedSearchBar"
-import { useDataDragon } from "../hooks/UseDataDragon"
+import { useDataDragon } from "../hooks/useDataDragon"
+import { usePopularChampions } from "../hooks/usePopularChampions"
 import logo from "../assets/logo.png"
 
 const HomePage = () => {
-  const [popularChampions, setPopularChampions] = useState([])
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState(null)
   const { getChampionImageUrl, loading: ddLoading } = useDataDragon()
-
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        setLoading(true)
-        setError(null)
-
-        // Fetch popular champions
-        const championsResponse = await axios.get("/api/ddragon/champions")
-        // championsResponse.data.data is an object with championId as keys
-        const sortedChampions = Object.values(championsResponse.data.data)
-          .sort((a, b) => Number.parseFloat(b.pickRate || 0) - Number.parseFloat(a.pickRate || 0))
-          .slice(0, 5)
-          .map((champion) => ({
-            id: champion.id,
-            name: champion.name,
-            // We'll use the getChampionImageUrl function in the render instead of storing URLs here
-          }))
-
-        setPopularChampions(sortedChampions)
-      } catch (error) {
-        console.error("Error fetching data:", error)
-        setError("Failed to load data. Please try again later.")
-
-        // Set fallback data
-        setPopularChampions([
-          { id: "Yasuo", name: "Yasuo" },
-          { id: "Jinx", name: "Jinx" },
-          { id: "Lux", name: "Lux" },
-          { id: "Zed", name: "Zed" },
-          { id: "Ahri", name: "Ahri" },
-        ])
-      } finally {
-        setLoading(false)
-      }
-    }
-
-    fetchData()
-  }, [])
+  const { popularChampions, loading, error } = usePopularChampions(5)
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-blue-500 to-blue-700">

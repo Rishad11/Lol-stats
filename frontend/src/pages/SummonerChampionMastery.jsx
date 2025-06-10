@@ -1,79 +1,21 @@
 "use client"
 
-import { useState, useEffect } from "react"
 import { useParams, Link } from "react-router-dom"
 import { ArrowLeft, Trophy, Award, Star, Target, TrendingUp } from "lucide-react"
-import axios from "axios"
-import { useDataDragon } from "../hooks/UseDataDragon"
+import { useDataDragon } from "../hooks/useDataDragon"
+import { useSummoner } from "../hooks/useSummoner"
+import { useChampionMastery } from "../hooks/useChampionMastery"
+import { formatNumber } from "../utils/gameHelpers"
 import SummonerTabs from "../components/SummonerTabs"
 
 const SummonerChampionMastery = () => {
   const { region, summonerName } = useParams()
-  const [summoner, setSummoner] = useState(null)
-  const [championMastery, setChampionMastery] = useState([])
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState(null)
-
   const { getChampionImageUrl, loading: ddLoading } = useDataDragon()
+  const { summoner, loading: summonerLoading, error: summonerError } = useSummoner(region, summonerName)
+  const { championMastery, loading: masteryLoading, error: masteryError } = useChampionMastery(region, summoner?.puuid)
 
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        setLoading(true)
-        setError(null)
-        let summonerData
-
-        if (summonerName.includes("#")) {
-          const [gameName, tagLine] = summonerName.split("#")
-          const accountRes = await axios.get(
-            `/api/account/by-riot-id/${encodeURIComponent(gameName)}/${encodeURIComponent(tagLine)}`,
-          )
-          const { puuid } = accountRes.data
-          const summonerRes = await axios.get(`/api/summoner/by-puuid/${region}/${puuid}`)
-          summonerData = summonerRes.data
-        } else {
-          const summonerRes = await axios.get(`/api/summoner/${region}/${encodeURIComponent(summonerName)}`)
-          summonerData = summonerRes.data
-        }
-
-        const rankResponse = await axios.get(`/api/summoner/${region}/${summonerData.id}/rank`)
-        summonerData.rank = rankResponse.data?.[0] || null
-
-        if (summonerData.rank) {
-          summonerData.totalGames = summonerData.rank.wins + summonerData.rank.losses
-          summonerData.winRate = Math.round((summonerData.rank.wins / summonerData.totalGames) * 100)
-        }
-
-        setSummoner(summonerData)
-
-        const masteryRes = await axios.get(`/api/summoner/${region}/${summonerData.puuid}/champion-mastery`)
-        setChampionMastery(masteryRes.data || [])
-      } catch (err) {
-        console.error("Error fetching champion mastery:", err)
-        const errorMessage = err.response?.data?.error || err.message
-
-        if (err.response?.status === 404) {
-          setError(`Summoner "${summonerName}" not found in ${region.toUpperCase()} region.`)
-        } else if (err.response?.status === 403) {
-          setError(`API key invalid or expired. Please check your API key.`)
-        } else {
-          setError(`Failed to load champion mastery: ${errorMessage}`)
-        }
-      } finally {
-        setLoading(false)
-      }
-    }
-    fetchData()
-  }, [region, summonerName])
-
-  const formatNumber = (num) => {
-    if (num >= 1000000) {
-      return (num / 1000000).toFixed(1) + "M"
-    } else if (num >= 1000) {
-      return (num / 1000).toFixed(1) + "K"
-    }
-    return num.toLocaleString()
-  }
+  const loading = summonerLoading || masteryLoading || ddLoading
+  const error = summonerError || masteryError
 
   const getMasteryBadge = (level) => {
     const configs = {
@@ -109,7 +51,7 @@ const SummonerChampionMastery = () => {
     return configs[level] || configs.default
   }
 
-  if (loading || ddLoading) {
+  if (loading) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">

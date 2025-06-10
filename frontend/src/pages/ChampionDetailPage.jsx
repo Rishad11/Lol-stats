@@ -1,16 +1,13 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState } from "react"
 import { useParams, Link } from "react-router-dom"
 import { ArrowLeft, Shield, Sword, Heart, Zap } from "lucide-react"
-import { fetchChampion } from "../services/apiCalls"
-import { useDataDragon } from "../hooks/UseDataDragon"
+import { useDataDragon } from "../hooks/useDataDragon"
+import { useChampion } from "../hooks/useChampion"
 
 const ChampionDetailPage = () => {
   const { championId } = useParams()
-  const [champion, setChampion] = useState(null)
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState(null)
   const [activeTab, setActiveTab] = useState("overview")
 
   const {
@@ -22,51 +19,51 @@ const ChampionDetailPage = () => {
     loading: ddLoading,
   } = useDataDragon()
 
-  useEffect(() => {
-    const fetchChampionDetails = async () => {
-      if (!version) return // Wait for version to be loaded
+  // The useChampion hook should return the champion object as returned by the backend,
+  // which for a single champion is: { data: { [championId]: { ... } } }
+  const { champion, loading, error } = useChampion(championId, version)
 
-      try {
-        setLoading(true)
-        setError(null)
-
-        const response = await fetchChampion(championId, version)
-        const championData = response.data[championId]
-
-        if (championData) {
-          // Transform the data to match your existing structure
-          const transformedChampion = {
-            ...championData,
-            image: getChampionImageUrl(championId),
-            splash: getChampionSplashUrl(championId),
-            spells: championData.spells?.map((spell) => ({
-              ...spell,
-              image: getSpellImageUrl(spell.image?.full?.replace(".png", "")),
-            })),
-            passive: championData.passive
-              ? {
-                  ...championData.passive,
-                  image: getPassiveImageUrl(championData.passive.image?.full?.replace(".png", "")),
-                }
-              : null,
-          }
-
-          setChampion(transformedChampion)
-        } else {
-          setError("Champion not found")
-        }
-      } catch (error) {
-        console.error("Error fetching champion details:", error)
-        setError("Failed to load champion details. Please try again later.")
-      } finally {
-        setLoading(false)
+  // Fix: For single champion endpoint, backend returns { data: { [championId]: { ... } } }
+  // But sometimes it may return { data: { ... } } or just { ... }.
+  // Let's handle both cases robustly.
+  let champData = null
+  if (champion) {
+    // If champion.data exists and is an object with keys, use that
+    if (champion.data && typeof champion.data === "object") {
+      // Try direct match
+      champData = champion.data[championId]
+      // Try case-insensitive match if not found
+      if (!champData) {
+        const foundKey = Object.keys(champion.data).find(
+          (key) => key.toLowerCase() === championId.toLowerCase()
+        )
+        if (foundKey) champData = champion.data[foundKey]
       }
     }
-
-    if (version && !ddLoading) {
-      fetchChampionDetails()
+    // If champion itself is the data object (some APIs return just the champion object)
+    else if (champion.id && (champion.id === championId || champion.id.toLowerCase() === championId.toLowerCase())) {
+      champData = champion
     }
-  }, [championId, version, ddLoading])
+  }
+
+  let transformedChampion = null
+  if (champData) {
+    transformedChampion = {
+      ...champData,
+      image: getChampionImageUrl(champData.id || championId),
+      splash: getChampionSplashUrl(champData.id || championId),
+      spells: champData.spells?.map((spell) => ({
+        ...spell,
+        image: getSpellImageUrl(spell.image?.full?.replace(".png", "")),
+      })),
+      passive: champData.passive
+        ? {
+            ...champData.passive,
+            image: getPassiveImageUrl(champData.passive.image?.full?.replace(".png", "")),
+          }
+        : null,
+    }
+  }
 
   if (loading || ddLoading) {
     return (
@@ -95,7 +92,7 @@ const ChampionDetailPage = () => {
     )
   }
 
-  if (!champion) {
+  if (!transformedChampion) {
     return (
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <Link to="/champions" className="inline-flex items-center text-blue-500 hover:underline mb-6">
@@ -118,8 +115,8 @@ const ChampionDetailPage = () => {
       <div className="relative rounded-lg overflow-hidden mb-8">
         <div className="absolute inset-0">
           <img
-            src={champion.splash || "/placeholder.svg"}
-            alt={champion.name}
+            src={transformedChampion.splash || "/placeholder.svg"}
+            alt={transformedChampion.name}
             className="w-full h-full object-cover object-center"
           />
           <div className="absolute inset-0 bg-gradient-to-t from-black to-transparent opacity-70"></div>
@@ -127,18 +124,18 @@ const ChampionDetailPage = () => {
         <div className="relative px-8 py-20 sm:py-32 flex flex-col items-start">
           <div className="flex items-center mb-4">
             <img
-              src={champion.image || "/placeholder.svg"}
-              alt={champion.name}
+              src={transformedChampion.image || "/placeholder.svg"}
+              alt={transformedChampion.name}
               className="w-16 h-16 rounded-full border-2 border-white mr-4"
             />
             <div>
-              <h1 className="text-4xl font-bold text-white">{champion.name}</h1>
-              <p className="text-xl text-gray-200">{champion.title}</p>
+              <h1 className="text-4xl font-bold text-white">{transformedChampion.name}</h1>
+              <p className="text-xl text-gray-200">{transformedChampion.title}</p>
             </div>
           </div>
           <div className="flex flex-wrap gap-2 mb-6">
-            {champion.tags &&
-              champion.tags.map((tag) => (
+            {transformedChampion.tags &&
+              transformedChampion.tags.map((tag) => (
                 <span key={tag} className="px-3 py-1 bg-blue-600 text-white text-sm rounded-full">
                   {tag}
                 </span>
@@ -188,12 +185,12 @@ const ChampionDetailPage = () => {
         {activeTab === "overview" && (
           <div>
             <h2 className="text-2xl font-bold mb-4">Lore</h2>
-            <p className="text-gray-700 mb-6">{champion.lore}</p>
+            <p className="text-gray-700 mb-6">{transformedChampion.lore}</p>
 
             <h3 className="text-xl font-bold mb-3">Champion Type</h3>
             <div className="flex flex-wrap gap-2 mb-6">
-              {champion.tags &&
-                champion.tags.map((tag) => (
+              {transformedChampion.tags &&
+                transformedChampion.tags.map((tag) => (
                   <div key={tag} className="flex items-center bg-gray-100 px-3 py-2 rounded-lg">
                     <span>{tag}</span>
                   </div>
@@ -207,27 +204,27 @@ const ChampionDetailPage = () => {
             <h2 className="text-2xl font-bold mb-4">Abilities</h2>
 
             {/* Passive */}
-            {champion.passive && (
+            {transformedChampion.passive && (
               <div className="mb-6 p-4 border border-gray-200 rounded-lg">
                 <div className="flex items-start">
                   <div className="w-12 h-12 rounded mr-4 flex-shrink-0 overflow-hidden bg-gray-100">
                     <img
-                      src={champion.passive.image || "/placeholder.svg"}
-                      alt={champion.passive.name}
+                      src={transformedChampion.passive.image || "/placeholder.svg"}
+                      alt={transformedChampion.passive.name}
                       className="w-full h-full object-cover"
                     />
                   </div>
                   <div>
-                    <h3 className="text-lg font-bold">Passive: {champion.passive.name}</h3>
-                    <p className="text-gray-700">{champion.passive.description}</p>
+                    <h3 className="text-lg font-bold">Passive: {transformedChampion.passive.name}</h3>
+                    <p className="text-gray-700">{transformedChampion.passive.description}</p>
                   </div>
                 </div>
               </div>
             )}
 
             {/* Spells */}
-            {champion.spells &&
-              champion.spells.map((spell, index) => (
+            {transformedChampion.spells &&
+              transformedChampion.spells.map((spell, index) => (
                 <div key={spell.id} className="mb-6 p-4 border border-gray-200 rounded-lg">
                   <div className="flex items-start">
                     <div className="relative mr-4">
@@ -266,7 +263,8 @@ const ChampionDetailPage = () => {
                       <span>Attack Damage</span>
                     </div>
                     <span className="font-medium">
-                      {champion.stats?.attackdamage} (+{champion.stats?.attackdamageperlevel} per level)
+                      {transformedChampion.stats?.attackdamage} (+{transformedChampion.stats?.attackdamageperlevel} per
+                      level)
                     </span>
                   </div>
                   <div className="flex justify-between items-center">
@@ -275,8 +273,8 @@ const ChampionDetailPage = () => {
                       <span>Attack Speed</span>
                     </div>
                     <span className="font-medium">
-                      {champion.stats?.attackspeed?.toFixed(3)} (+
-                      {(champion.stats?.attackspeedperlevel / 100)?.toFixed(3)} per level)
+                      {transformedChampion.stats?.attackspeed?.toFixed(3)} (+
+                      {(transformedChampion.stats?.attackspeedperlevel / 100)?.toFixed(3)} per level)
                     </span>
                   </div>
                   <div className="flex justify-between items-center">
@@ -284,7 +282,7 @@ const ChampionDetailPage = () => {
                       <Sword className="h-5 w-5 mr-2 text-blue-500" />
                       <span>Attack Range</span>
                     </div>
-                    <span className="font-medium">{champion.stats?.attackrange}</span>
+                    <span className="font-medium">{transformedChampion.stats?.attackrange}</span>
                   </div>
                 </div>
               </div>
@@ -298,7 +296,7 @@ const ChampionDetailPage = () => {
                       <span>Health</span>
                     </div>
                     <span className="font-medium">
-                      {champion.stats?.hp} (+{champion.stats?.hpperlevel} per level)
+                      {transformedChampion.stats?.hp} (+{transformedChampion.stats?.hpperlevel} per level)
                     </span>
                   </div>
                   <div className="flex justify-between items-center">
@@ -307,7 +305,7 @@ const ChampionDetailPage = () => {
                       <span>Armor</span>
                     </div>
                     <span className="font-medium">
-                      {champion.stats?.armor} (+{champion.stats?.armorperlevel} per level)
+                      {transformedChampion.stats?.armor} (+{transformedChampion.stats?.armorperlevel} per level)
                     </span>
                   </div>
                   <div className="flex justify-between items-center">
@@ -316,7 +314,8 @@ const ChampionDetailPage = () => {
                       <span>Magic Resist</span>
                     </div>
                     <span className="font-medium">
-                      {champion.stats?.spellblock} (+{champion.stats?.spellblockperlevel} per level)
+                      {transformedChampion.stats?.spellblock} (+{transformedChampion.stats?.spellblockperlevel} per
+                      level)
                     </span>
                   </div>
                   <div className="flex justify-between items-center">
@@ -324,7 +323,7 @@ const ChampionDetailPage = () => {
                       <Zap className="h-5 w-5 mr-2 text-blue-500" />
                       <span>Movement Speed</span>
                     </div>
-                    <span className="font-medium">{champion.stats?.movespeed}</span>
+                    <span className="font-medium">{transformedChampion.stats?.movespeed}</span>
                   </div>
                 </div>
               </div>
@@ -338,13 +337,13 @@ const ChampionDetailPage = () => {
                   <div className="flex justify-between items-center">
                     <span>Mana</span>
                     <span className="font-medium">
-                      {champion.stats?.mp} (+{champion.stats?.mpperlevel} per level)
+                      {transformedChampion.stats?.mp} (+{transformedChampion.stats?.mpperlevel} per level)
                     </span>
                   </div>
                   <div className="flex justify-between items-center">
                     <span>Mana Regen</span>
                     <span className="font-medium">
-                      {champion.stats?.mpregen} (+{champion.stats?.mpregenperlevel} per level)
+                      {transformedChampion.stats?.mpregen} (+{transformedChampion.stats?.mpregenperlevel} per level)
                     </span>
                   </div>
                 </div>
@@ -352,12 +351,12 @@ const ChampionDetailPage = () => {
                   <div className="flex justify-between items-center">
                     <span>Health Regen</span>
                     <span className="font-medium">
-                      {champion.stats?.hpregen} (+{champion.stats?.hpregenperlevel} per level)
+                      {transformedChampion.stats?.hpregen} (+{transformedChampion.stats?.hpregenperlevel} per level)
                     </span>
                   </div>
                   <div className="flex justify-between items-center">
                     <span>Crit Chance</span>
-                    <span className="font-medium">{champion.stats?.crit}%</span>
+                    <span className="font-medium">{transformedChampion.stats?.crit}%</span>
                   </div>
                 </div>
               </div>
