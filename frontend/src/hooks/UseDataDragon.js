@@ -6,15 +6,6 @@ import { summonerSpells } from "../utils/ddragon/summonerSpells"
 import { runeStyles } from "../utils/ddragon/runeStyles"
 import { keystoneRunes } from "../utils/ddragon/keystoneRunes"
 import {
-  buildChampionUrl,
-  buildChampionSplashUrl,
-  buildItemUrl,
-  buildSpellUrl,
-  buildProfileIconUrl,
-  buildPassiveUrl,
-  buildSummonerSpellUrl,
-  buildKeystoneRuneUrl,
-  buildRuneTreeUrl,
   getRuneTreeColor,
   getRuneTreeAbbr,
 } from "../utils/ddragon/imageHelpers"
@@ -36,7 +27,7 @@ export const useDataDragon = () => {
         const urlsResponse = await getAssetUrls(currentVersion)
 
         setVersion(currentVersion)
-        setAssetUrls(urlsResponse.data)
+        setAssetUrls(urlsResponse.data.urls)
       } catch (err) {
         console.error("Error initializing Data Dragon:", err)
         setError(err.message)
@@ -48,16 +39,44 @@ export const useDataDragon = () => {
     initializeDataDragon()
   }, [])
 
-  // Helper functions that use the current version
-  const getChampionImageUrl = (championId) => buildChampionUrl(championId, version)
-  const getChampionSplashUrl = (championId, skinNum = 0) => buildChampionSplashUrl(championId, skinNum)
-  const getItemImageUrl = (itemId) => buildItemUrl(itemId, version)
-  const getSpellImageUrl = (spellId) => buildSpellUrl(spellId, version)
-  const getProfileIconUrl = (iconId) => buildProfileIconUrl(iconId, version)
-  const getPassiveImageUrl = (passiveId) => buildPassiveUrl(passiveId, version)
-  const getSummonerSpellImageUrl = (spellId) => buildSummonerSpellUrl(spellId, version, summonerSpells)
-  const getKeystoneRuneImageUrl = (runeId) => buildKeystoneRuneUrl(runeId, keystoneRunes)
-  const getRuneTreeImageUrl = (styleId) => buildRuneTreeUrl(styleId, runeStyles)
+  // Helper to fill in template strings
+  const make = (template, vars) =>
+    template.replace(/\{(\w+)\}/g, (_, key) => vars[key] ?? "")
+
+  // Helper functions that use assetUrls from backend
+  const getChampionImageUrl = (championId) =>
+    assetUrls?.champion ? make(assetUrls.champion, { id: championId }) : "/placeholder.svg"
+  const getChampionSplashUrl = (championId, skinNum = 0) =>
+    assetUrls?.championSplash ? make(assetUrls.championSplash, { id: championId, skinNum }) : "/placeholder.svg"
+  const getItemImageUrl = (itemId) =>
+    assetUrls?.item ? make(assetUrls.item, { id: itemId }) : "/placeholder.svg"
+  const getSpellImageUrl = (spellId) =>
+    assetUrls?.spell ? make(assetUrls.spell, { id: spellId }) : "/placeholder.svg"
+  const getProfileIconUrl = (iconId) =>
+    assetUrls?.profileIcon ? make(assetUrls.profileIcon, { id: iconId }) : "/placeholder.svg"
+  const getPassiveImageUrl = (passiveId) =>
+    assetUrls?.passive ? make(assetUrls.passive, { id: passiveId }) : "/placeholder.svg"
+  const getSummonerSpellImageUrl = (spellKeyOrId) => {
+    if (!assetUrls?.spell) return "/placeholder.svg"
+    let spellName = spellKeyOrId
+    if (summonerSpells && summonerSpells[spellKeyOrId]) {
+      spellName = summonerSpells[spellKeyOrId]
+    }
+    return make(assetUrls.spell, { id: spellName })
+  }
+  const getKeystoneRuneImageUrl = (runeId) => {
+    if (!assetUrls?.rune || !keystoneRunes) return "/placeholder.svg"
+    const rune = keystoneRunes[runeId]
+    if (!rune) return "/placeholder.svg"
+    // Use placeholders: {tree} and {name}
+    return make(assetUrls.rune, { tree: rune.tree, name: rune.name })
+  }
+  const getRuneTreeImageUrl = (styleId) => {
+    if (!assetUrls?.runeTree || !runeStyles) return "/placeholder.svg"
+    const styleName = runeStyles[styleId]
+    if (!styleName) return "/placeholder.svg"
+    return make(assetUrls.runeTree, { id: styleName })
+  }
 
   return {
     version,
@@ -73,9 +92,9 @@ export const useDataDragon = () => {
     getSummonerSpellImageUrl,
     getKeystoneRuneImageUrl,
     getRuneTreeImageUrl,
+    // If you need keystone rune, rune tree images, add similar helpers here
     getRuneTreeColor,
     getRuneTreeAbbr,
-    // Export the mappings for use in components
     summonerSpells,
     runeStyles,
     keystoneRunes,

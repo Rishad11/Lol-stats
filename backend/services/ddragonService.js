@@ -186,19 +186,18 @@ class DDragonService {
       version = this.currentVersion || DEFAULT_VERSION
     }
 
+    // Return string templates with placeholders
     return {
-      champion: (championId) => `${DDRAGON_BASE_URL}/cdn/${version}/img/champion/${championId}.png`,
-      championSquare: (championId) => `${DDRAGON_BASE_URL}/cdn/${version}/img/champion/${championId}.png`,
-      championSplash: (championId, skinNum = 0) =>
-        `${DDRAGON_BASE_URL}/cdn/img/champion/splash/${championId}_${skinNum}.jpg`,
-      championLoading: (championId, skinNum = 0) =>
-        `${DDRAGON_BASE_URL}/cdn/img/champion/loading/${championId}_${skinNum}.jpg`,
-      spell: (spellId) => `${DDRAGON_BASE_URL}/cdn/${version}/img/spell/${spellId}.png`,
-      item: (itemId) => `${DDRAGON_BASE_URL}/cdn/${version}/img/item/${itemId}.png`,
-      profileIcon: (iconId) => `${DDRAGON_BASE_URL}/cdn/${version}/img/profileicon/${iconId}.png`,
-      passive: (passiveId) => `${DDRAGON_BASE_URL}/cdn/${version}/img/passive/${passiveId}.png`,
-      rune: (runeId) => `${DDRAGON_BASE_URL}/cdn/img/perk-images/Styles/RunesReforged/Keystone/${runeId}.png`,
-      runeTree: (treeId) => `${DDRAGON_BASE_URL}/cdn/img/perk-images/Styles/${treeId}.png`,
+      champion:       `${DDRAGON_BASE_URL}/cdn/${version}/img/champion/{id}.png`,
+      championSquare: `${DDRAGON_BASE_URL}/cdn/${version}/img/champion/{id}.png`,
+      championSplash: `${DDRAGON_BASE_URL}/cdn/img/champion/splash/{id}_{skinNum}.jpg`,
+      championLoading: `${DDRAGON_BASE_URL}/cdn/img/champion/loading/{id}_{skinNum}.jpg`,
+      spell:          `${DDRAGON_BASE_URL}/cdn/${version}/img/spell/{id}.png`,
+      item:           `${DDRAGON_BASE_URL}/cdn/${version}/img/item/{id}.png`,
+      profileIcon:    `${DDRAGON_BASE_URL}/cdn/${version}/img/profileicon/{id}.png`,
+      passive:        `${DDRAGON_BASE_URL}/cdn/${version}/img/passive/{id}.png`,
+      rune:           `${DDRAGON_BASE_URL}/cdn/img/perk-images/Styles/{tree}/{name}/{name}.png`, // updated
+      runeTree:       `${DDRAGON_BASE_URL}/cdn/img/perk-images/Styles/{id}.png`,
     }
   }
 }
