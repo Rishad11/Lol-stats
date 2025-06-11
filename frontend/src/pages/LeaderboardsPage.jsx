@@ -10,7 +10,6 @@ const LeaderboardsPage = () => {
   const [region, setRegion] = useState("na")
   const { players, loading, error } = useLeaderboards(region, 10)
 
-  // Derive lowercase platform code for routing
   const platformCode = getPlatformCode(region)
   const regions = getRegionOptions()
 
