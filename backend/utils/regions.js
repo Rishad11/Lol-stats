@@ -27,7 +27,7 @@ const regionToPlatform = {
   euw1: "EUW1",
   eun:  "EUN1",
   eun1: "EUN1",
-  eune: "EUN1", // Add this line
+  eune: "EUN1",
   kr:   "KR",
   jp:   "JP1",
   jp1:  "JP1",
@@ -53,7 +53,7 @@ const regionToCluster = {
   euw1: "europe",
   eun:  "europe",
   eun1: "europe",
-  eune: "europe", // Add this line
+  eune: "europe",
   ru:   "europe",
   tr:   "europe",
   tr1:  "europe",

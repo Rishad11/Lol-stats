@@ -109,23 +109,69 @@ const UnifiedSearchBar = ({ placeholder = "Search champions or Riot ID (name#tag
     setQuery("")
   }
 
+  // Custom render function for search results
+  const renderCustomResultItem = (item) => {
+    if (item.type === "summoner") {
+      return (
+        <div className="flex items-center w-full">
+          {item.profileIconUrl && (
+            <img
+              src={item.profileIconUrl || "/placeholder.svg"}
+              alt={`${item.gameName} profile`}
+              className="w-10 h-10 rounded-full mr-3 object-cover border-2 border-gray-200"
+              onError={(e) => {
+                e.target.onerror = null
+                e.target.src = `/placeholder.svg?height=40&width=40&text=${item.gameName?.charAt(0) || "?"}`
+              }}
+            />
+          )}
+          <div className="flex flex-col">
+            <div className="font-semibold text-black">
+              {item.gameName || "Unknown"}#{item.tagLine || "???"}
+            </div>
+            <div className="text-sm text-gray-600">Level {item.summonerLevel || "?"}</div>
+          </div>
+        </div>
+      )
+    }
+
+    // Default rendering for champions
+    return (
+      <>
+        {item.image && (
+          <img
+            src={item.image || "/placeholder.svg"}
+            alt={item.name}
+            className="w-8 h-8 rounded-full mr-3 object-cover"
+            onError={(e) => {
+              e.target.onerror = null
+              e.target.src = `/placeholder.svg?height=32&width=32&text=${item.name?.charAt(0) || "?"}`
+            }}
+          />
+        )}
+        <div>
+          <div className="font-medium text-gray-900">{item.name}</div>
+          {item.title && <div className="text-xs text-gray-500">{item.title}</div>}
+        </div>
+      </>
+    )
+  }
+
   return (
     <div className="relative">
       <form onSubmit={handleSubmit} className="flex">
         <select
           value={region}
           onChange={(e) => setRegion(e.target.value)}
-          className="rounded-l-md border-0 py-1.5 text-gray-900 bg-white"
+          className="rounded-l-md border-0 py-1.5 text-gray-900 bg-white font-medium"
         >
           {regions.map((region) => (
             <option key={region.code} value={region.code}>
-              {/* Show region.shortName or region.name for display, but value must be region.code */}
               {region.shortName || region.name}
             </option>
           ))}
         </select>
         <div className="flex-1">
-          {/* Reuse SearchBar input and dropdown UI, but control via UnifiedSearchBar state */}
           <SearchBar
             placeholder={placeholder}
             query={query}
@@ -140,7 +186,8 @@ const UnifiedSearchBar = ({ placeholder = "Search champions or Riot ID (name#tag
             setError={setError}
             onResultClick={handleResultClick}
             inputClassName="w-full border-0 py-1.5 pl-3 pr-10 text-gray-900 placeholder:text-gray-400 focus:ring-0"
-            hideForm // Hide SearchBar's own form, since UnifiedSearchBar wraps it
+            hideForm
+            renderCustomResultItem={renderCustomResultItem}
           />
         </div>
         <button
@@ -148,7 +195,20 @@ const UnifiedSearchBar = ({ placeholder = "Search champions or Riot ID (name#tag
           className="bg-blue-800 p-1.5 rounded-r-md hover:bg-blue-900 text-white"
           aria-label="Search"
         >
-          {/* ...existing code... */}
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            width="20"
+            height="20"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          >
+            <circle cx="11" cy="11" r="8"></circle>
+            <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+          </svg>
         </button>
       </form>
     </div>

@@ -31,7 +31,7 @@ const HomePage = () => {
           </div>
 
           <div className="mt-16">
-            <h2 className="text-2xl font-bold text-white mb-6">Popular Champions</h2>
+            <h2 className="text-2xl font-bold text-white mb-6">Browse Champions: Learn Their Lore, Abilities, and Stats</h2>
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-4 max-w-3xl mx-auto">
               {loading || ddLoading
                 ? // Loading skeleton

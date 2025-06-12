@@ -22,7 +22,6 @@ const SearchBar = ({
   hideForm = false,
   renderCustomResultItem,
 }) => {
-  // Use controlled state if provided, otherwise fallback to internal state
   const [query, setQuery] = controlledQuery !== undefined ? [controlledQuery, setControlledQuery] : useState("")
   const [results, setResults] = controlledResults !== undefined ? [controlledResults, setControlledResults] : useState([])
   const [loading, setLoading] = controlledLoading !== undefined ? [controlledLoading, setControlledLoading] : useState(false)
@@ -31,7 +30,6 @@ const SearchBar = ({
   const searchRef = useRef(null)
   const navigate = useNavigate()
 
-  // Debounced search (only if not controlled externally)
   useEffect(() => {
     if (
       controlledQuery !== undefined ||

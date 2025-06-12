@@ -1,5 +1,3 @@
-// services/riotApi.js
-
 const axios = require("axios");
 const { regionToCluster } = require("../utils/regions");
 const { riotHeaders } = require("../utils/riotHelpers");
@@ -15,11 +13,11 @@ function platformFor(region) {
 
 /**
  * Fetch a page of match IDs, optionally only after `beginTime`.
- * @param {string} region – e.g. "euw1"
+ * @param {string} region
  * @param {string} puuid
- * @param {number} start – pagination offset
- * @param {number} count – how many IDs
- * @param {number} [beginTime] – UNIX ms to only return matches after this time
+ * @param {number} start
+ * @param {number} count
+ * @param {number} [beginTime]
  */
 async function getMatchIdsByPUUID(
   region,

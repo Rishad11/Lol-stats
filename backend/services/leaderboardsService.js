@@ -1,4 +1,3 @@
-// services/leaderboardsService.js
 const axios = require("axios");
 const { fetchRiotIdByPUUID } = require("./summonerService");
 const { regionToPlatform } = require("../utils/regions");

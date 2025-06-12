@@ -17,9 +17,6 @@ export const useChampion = (championId, version) => {
         setError(null)
 
         const response = await getChampion(championId, version)
-        // The backend returns { data: { [championId]: { ... } } }
-        // or just { data: { ... } }
-        // or just { ... }
         let champData = null
         if (response.data) {
           // If response.data.data exists (ddragon format), use that

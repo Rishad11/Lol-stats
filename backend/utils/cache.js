@@ -1,4 +1,3 @@
-// Simple in-memory cache implementation
 const cache = new Map()
 
 module.exports = {
@@ -16,7 +15,7 @@ module.exports = {
     return item.value
   },
 
-  // Set value in cache with optional TTL in seconds
+  // Set value in cache
   set: (key, value, ttl = null) => {
     const item = {
       value,

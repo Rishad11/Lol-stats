@@ -17,7 +17,6 @@ const perTwoMinuteLimiter = rateLimit({
   legacyHeaders: false,
 });
 
-// Combine both limiters into a single middleware
 const rateLimiter = express.Router();
 rateLimiter.use(perSecondLimiter);
 rateLimiter.use(perTwoMinuteLimiter);
